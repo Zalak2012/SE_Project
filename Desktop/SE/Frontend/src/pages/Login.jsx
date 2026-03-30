@@ -1,19 +1,48 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from '../context/AuthContext';
+import { apiLogin } from '../services/mockApi';
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { login } = useAuth();
+    
     const [formData, setFormData] = useState({
         email: "",
         password: "",
     });
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        setError("");
     };
-    const handleSubmit = (e) => {
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        navigate("/");
+        
+        if (!formData.email || !formData.password) {
+            setError("Please fill in all fields.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const { token, user } = await apiLogin(formData.email, formData.password);
+            
+            // Context injection
+            login(user, token);
+            
+            // Redirect behavior handling protected router states
+            const dest = location.state?.from || `/dashboard`;
+            navigate(dest);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -45,6 +74,8 @@ const Login = () => {
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
+
+                    {/* Login has no standalone role requirement right now since we resolve role on auth directly, but I'll remove the unused `role` state selection visual from this form to map to standard flows. */}
 
                     {/* Email */}
                     <div className="relative">
@@ -90,19 +121,23 @@ const Login = () => {
                         </span>
                     </div>
 
+                    {/* Error state */}
+                    {error && <p className="text-red-500 text-sm text-center font-semibold">{error}</p>}
+
                     {/* Button */}
                     <button
                         type="submit"
-                        className="w-full text-white font-semibold py-3 rounded-xl transition-all"
+                        disabled={isLoading}
+                        className={`w-full text-white font-semibold py-3 rounded-xl transition-all ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                         style={{ backgroundColor: "#0277BD" }}
                         onMouseOver={(e) =>
-                            (e.currentTarget.style.backgroundColor = "#01579B")
+                            !isLoading && (e.currentTarget.style.backgroundColor = "#01579B")
                         }
                         onMouseOut={(e) =>
-                            (e.currentTarget.style.backgroundColor = "#0277BD")
+                            !isLoading && (e.currentTarget.style.backgroundColor = "#0277BD")
                         }
                     >
-                        Log In →
+                        {isLoading ? "Logging in..." : "Log In →"}
                     </button>
                 </form>
 

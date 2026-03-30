@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Footer from "../components/Footer";
+import Navbar from "../components/Navbar";
+import { useAuth } from "../context/AuthContext";
 
 const FindDoctors = () => {
+    const navigate = useNavigate();
+    const { handleProtectedAction } = useAuth();
     // Sample Doctor Data
     const doctors = [
         {
@@ -98,6 +102,7 @@ const FindDoctors = () => {
     ];
 
     const [search, setSearch] = useState('');
+    const [selectedDoctor, setSelectedDoctor] = useState(null);
     const [specialty, setSpecialty] = useState('');
     const [minRating, setMinRating] = useState(0);
     const [expRange, setExpRange] = useState(0);
@@ -165,34 +170,7 @@ const FindDoctors = () => {
     return (
         <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
             {/* Header / Navbar */}
-            <header className="sticky top-0 z-50 bg-white border-b border-[#B3E5FC]/50 shadow-sm">
-                <div className="container mx-auto px-4 md:px-8 py-4 flex justify-between items-center max-w-7xl">
-                    <Link to="/" className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-[#01579B] flex items-center justify-center text-white font-bold text-xl">
-                            C
-                        </div>
-                        <span className="text-xl font-bold tracking-tight text-[#01579B]">
-                            Care<span className="text-[#00A896]">Mate</span><span className="text-[#039BE5]">Plus</span>
-                        </span>
-                    </Link>
-                    <nav className="hidden md:flex items-center gap-8">
-                        <Link to="/doctors" className="text-[#0277BD] font-semibold transition-colors">Find Doctors</Link>
-                        <a href="#" className="text-gray-600 hover:text-[#0277BD] font-medium transition-colors">Specialties</a>
-                        <a href="#" className="text-gray-600 hover:text-[#0277BD] font-medium transition-colors">AI Checker</a>
-                        <a href="#" className="text-gray-600 hover:text-[#0277BD] font-medium transition-colors">About Us</a>
-                    </nav>
-                    <div className="flex items-center gap-4">
-                        <Link to="/login" className="text-[#0277BD] font-medium hover:text-[#01579B] transition-colors hidden sm:flex items-center gap-2 group">
-                            <svg className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
-                            Sign In
-                        </Link>
-                        <Link to="/signup" className="bg-[#0277BD] hover:bg-[#01579B] text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-                            Get Started
-                        </Link>
-                    </div>
-                </div>
-            </header>
+            <Navbar />
 
             {/* Find Doctors Page */}
 
@@ -374,7 +352,8 @@ const FindDoctors = () => {
                                 <div
                                     key={doctor.id}
                                     style={{ animationDelay: `${index * 100}ms` }}
-                                    className={`animate-[fadeIn_0.5s_ease-out_both] bg-white rounded-2xl shadow-md border border-gray-50 p-6 hover:shadow-xl hover:border-[#B3E5FC] transition-all duration-300 group ${viewMode === 'grid' ? 'flex flex-col h-full hover:scale-[1.03] hover:-translate-y-1.5' : 'flex flex-col sm:flex-row gap-8 items-center hover:scale-[1.01] hover:-translate-x-1'}`}
+                                    onClick={() => setSelectedDoctor(doctor)}
+                                    className={`cursor-pointer animate-[fadeIn_0.5s_ease-out_both] bg-white rounded-2xl shadow-md border border-gray-50 p-6 hover:shadow-xl hover:border-[#B3E5FC] transition-all duration-300 group ${viewMode === 'grid' ? 'flex flex-col h-full hover:scale-[1.03] hover:-translate-y-1.5' : 'flex flex-col sm:flex-row gap-8 items-center hover:scale-[1.01] hover:-translate-x-1'}`}
                                 >
 
                                     <div className={`flex gap-4 items-start ${viewMode === 'grid' ? 'mb-4' : 'w-full sm:w-1/3'}`}>
@@ -427,10 +406,16 @@ const FindDoctors = () => {
                                         </div>
 
                                         <div className="flex gap-4 pt-6 mt-auto">
-                                            <button className="flex-1 bg-white border-2 border-[#028090] text-[#028090] hover:bg-gray-50 py-3 rounded-xl font-bold text-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 mb-0.5">
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); navigate(`/doctors/${doctor.id}`); }} 
+                                                className="flex-1 bg-white border-2 border-[#028090] text-[#028090] hover:bg-gray-50 py-3 rounded-xl font-bold text-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 mb-0.5"
+                                            >
                                                 View Profile
                                             </button>
-                                            <button className="flex-1 bg-[#028090] hover:bg-[#00A896] text-white py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 mb-0.5">
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); handleProtectedAction(e, `/booking/${doctor.id}`); }} 
+                                                className="flex-1 bg-[#028090] hover:bg-[#00A896] text-white py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 mb-0.5"
+                                            >
                                                 Book Now
                                             </button>
                                         </div>
@@ -441,6 +426,61 @@ const FindDoctors = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Quick Preview Modal */}
+            {selectedDoctor && (
+                <div 
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]"
+                    onClick={() => setSelectedDoctor(null)}
+                >
+                    <div 
+                        className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 relative animate-[scaleIn_0.3s_ease-out]"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button 
+                            onClick={() => setSelectedDoctor(null)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors focus:outline-none"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                        
+                        <div className="flex flex-col items-center flex-grow text-center">
+                            <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-md mb-4 border-2 border-white ring-4 ring-[#E1F5FE]">
+                                <img src={selectedDoctor.image} alt={selectedDoctor.name} className="w-full h-full object-cover" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-[#01579B] mt-2">{selectedDoctor.name}</h2>
+                            <p className="text-[#028090] font-medium text-md mb-4">{selectedDoctor.specialty}</p>
+                            
+                            <div className="flex items-center gap-2 mb-6 bg-[#F8FAFC] px-5 py-2.5 rounded-full border border-gray-100 shadow-sm">
+                                <span className="text-yellow-400 text-lg leading-none">★</span>
+                                <span className="font-bold text-gray-700 leading-none">{selectedDoctor.rating}</span>
+                                <span className="text-gray-400 text-sm leading-none">({selectedDoctor.reviews})</span>
+                                <span className="text-gray-300 mx-1 leading-none">|</span>
+                                <span className="text-gray-600 font-medium text-sm leading-none">{selectedDoctor.experience} Yrs Exp.</span>
+                            </div>
+                            
+                            <p className="text-gray-500 text-sm mb-8 leading-relaxed max-w-md">
+                                Dr. {selectedDoctor.name.split(' ').pop()} is a highly rated {selectedDoctor.specialty.toLowerCase()} dedicated to providing exceptional care. With over {selectedDoctor.experience} years of clinical experience, they specialize in offering comprehensive and patient-centered treatments.
+                            </p>
+                            
+                            <div className="w-full flex gap-3">
+                                <button 
+                                    onClick={() => navigate(`/doctors/${selectedDoctor.id}`)}
+                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-sm bg-gray-50 text-[#0277BD] border border-gray-200 hover:border-[#0277BD] hover:bg-[#E1F5FE] transition-colors"
+                                >
+                                    View Full Profile
+                                </button>
+                                <button 
+                                    onClick={(e) => handleProtectedAction(e, `/booking/${selectedDoctor.id}`)}
+                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-sm bg-[#028090] hover:bg-[#00A896] text-white shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5"
+                                >
+                                    Book Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Footer Section (Minimal copy for routing pages) */}
             <Footer />
