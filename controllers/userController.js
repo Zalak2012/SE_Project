@@ -2,6 +2,19 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+// Helper: Generate JWT Token
+const generateToken = (user) => {
+  return jwt.sign(
+    {
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
+  );
+};
+
 // ================= SIGNUP =================
 exports.signupUser = async (req, res) => {
   try {
@@ -35,8 +48,17 @@ exports.signupUser = async (req, res) => {
 
     await newUser.save();
 
+    // ✅ Generate JWT token on signup (auto-login)
+    const token = generateToken(newUser);
+
     res.status(201).json({
-      message: "User registered successfully ✅"
+      message: "User registered successfully ✅",
+      token,
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email
+      }
     });
 
   } catch (error) {
@@ -77,16 +99,8 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    // ✅ Create JWT
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        name: user.name,
-        email: user.email
-      },
-      "secretkey123",
-      { expiresIn: "1h" }
-    );
+    // ✅ Create JWT using env variable
+    const token = generateToken(user);
 
     res.status(200).json({
       message: "Login successful ✅",
