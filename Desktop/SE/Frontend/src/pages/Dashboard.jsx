@@ -107,26 +107,7 @@ const DoctorDashboard = () => (
     </div>
 );
 
-const AdminDashboard = () => (
-    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex-grow w-full max-w-7xl mx-auto mt-8 mb-12 animate-[fadeIn_0.5s_ease-out_both] px-4 md:px-8">
-        <div className="flex items-center gap-4 mb-8">
-            <div className="w-16 h-16 bg-[#039BE5]/10 text-[#039BE5] rounded-2xl flex items-center justify-center text-3xl font-bold">🛡️</div>
-            <div>
-                <h2 className="text-2xl font-bold text-gray-800">Admin Dashboard</h2>
-                <p className="text-gray-500">System overview and management.</p>
-            </div>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6">
-            {[['👨‍⚕️', 'Active Doctors', '156'], ['👶', 'Active Patients', '8,920'], ['💳', 'Revenue Today', '₹45,000']].map(([icon, label, val]) => (
-                <div key={label} className="bg-[#F8FAFC] p-6 rounded-2xl border border-gray-100 flex flex-col items-center text-center">
-                    <span className="text-3xl mb-2">{icon}</span>
-                    <h3 className="font-bold text-gray-800">{label}</h3>
-                    <p className="text-2xl font-bold text-[#039BE5] mt-2">{val}</p>
-                </div>
-            ))}
-        </div>
-    </div>
-);
+
 
 /* ─── PREMIUM PATIENT DASHBOARD ──────────────────────────────────────────── */
 const PatientDashboard = ({ userName }) => {
@@ -449,12 +430,12 @@ const Dashboard = () => {
     const userName = userProfile?.name || 'there';
 
     if (!isAuth) return <Navigate to="/login" replace />;
+    if (currentRole === 'admin') return <Navigate to="/admin-dashboard" replace />;
     if (role && currentRole && role !== currentRole) return <Navigate to={`/dashboard/${currentRole}`} replace />;
 
     const renderContent = () => {
         switch (role) {
             case 'doctor': return <DoctorDashboard />;
-            case 'admin': return <AdminDashboard />;
             case 'patient':
             default: return <PatientDashboard userName={userName} />;
         }

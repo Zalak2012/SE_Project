@@ -2,6 +2,8 @@
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+import { ADMIN } from '../Admin/utils/adminAuth';
+
 const getDb = () => JSON.parse(localStorage.getItem('mock_db_users') || '[]');
 const saveDb = (users) => localStorage.setItem('mock_db_users', JSON.stringify(users));
 
@@ -45,6 +47,20 @@ export const apiSignup = async (userData) => {
 
 export const apiLogin = async (email, password) => {
     await delay(800);
+    
+    // Check for hardcoded admin first
+    if (email.toLowerCase() === ADMIN.email.toLowerCase() && password === ADMIN.password) {
+        return {
+            token: `mock_jwt_admin_${Date.now()}`,
+            user: {
+                userId: ADMIN.userId,
+                name: ADMIN.name,
+                email: ADMIN.email,
+                role: ADMIN.role
+            }
+        };
+    }
+
     const users = getDb();
     
     // Validate credentials
