@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 
 const protect = require("./middleware/authMiddleware");
 const userRoutes = require("./routes/userRoutes");
+const appointmentRoutes = require("./routes/appointmentRoutes");
 const User = require("./models/User");
 
 const app = express();
@@ -29,7 +30,6 @@ app.get("/", (req, res) => {
 app.get("/api/protected", protect, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select("-password");
-
     res.json({
       message: "Protected route accessed ✅",
       user: {
@@ -38,7 +38,6 @@ app.get("/api/protected", protect, async (req, res) => {
         userId: user._id
       }
     });
-
   } catch (error) {
     res.status(500).json({ message: "Error fetching user" });
   }
@@ -46,15 +45,22 @@ app.get("/api/protected", protect, async (req, res) => {
 
 // Routes
 app.use("/api/users", userRoutes);
+app.use("/api/appointments", appointmentRoutes);
 
-// 🔥 CONNECT TO MONGODB ATLAS (ONLY THIS ONE)
-mongoose.connect(process.env.MONGO_URI)
+// 🔥 CONNECT TO MONGODB ATLAS
+mongoose.connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 5000 // Add a timeout so it doesn't hang forever
+})
   .then(() => {
     console.log("MongoDB Atlas connected ✅");
-
-    // Start server ONLY after DB connects
-    app.listen(5000, () => {
-      console.log("Server running on port 5000");
-    });
   })
-  .catch(err => console.log("Mongo Error:", err));
+  .catch(err => {
+    console.error("❌ Mongo Connection Error: Ensure your IP is whitelisted in MongoDB Atlas and credentials are correct!");
+    console.error(err);
+  });
+
+// Start server independently of DB connection
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Server is now running and accepting API requests on http://127.0.0.1:${PORT}`);
+});
