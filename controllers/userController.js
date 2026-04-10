@@ -22,13 +22,12 @@ const generateToken = (user) => {
 
 // ================= HELPER: Validations =================
 const isValidEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com|[a-zA-Z0-9.-]+\.(ac\.in|edu|gov\.in|co\.in))$/;
   return emailRegex.test(email);
 };
 
 const isValidPassword = (password) => {
-  // At least 8 chars, 1 uppercase, 1 number, 1 special character
-  const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   return passwordRegex.test(password);
 };
 
@@ -46,15 +45,9 @@ exports.signupUser = async (req, res) => {
       });
     }
 
-    if (!isValidEmail(email)) {
+    if (!isValidEmail(email) || !isValidPassword(password)) {
       return res.status(400).json({
-        message: "Invalid email format.",
-      });
-    }
-
-    if (!isValidPassword(password)) {
-      return res.status(400).json({
-        message: "Password must be at least 8 characters, contain 1 uppercase, 1 number, and 1 special character.",
+        message: "Invalid email or password format"
       });
     }
 
