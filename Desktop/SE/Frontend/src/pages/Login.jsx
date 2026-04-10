@@ -1,49 +1,42 @@
 import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from '../context/AuthContext';
-import { apiLogin } from '../services/mockApi';
+import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const { login } = useAuth();
-    
     const [formData, setFormData] = useState({
         email: "",
         password: "",
     });
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState("");
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        setError("");
     };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        if (!formData.email || !formData.password) {
-            setError("Please fill in all fields.");
-            return;
-        }
+  try {
+    const response = await fetch("http://localhost:8080/api/users/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password
+      })
+    });
 
-        setIsLoading(true);
-        try {
-            const { token, user } = await apiLogin(formData.email, formData.password);
-            
-            // Context injection
-            login(user, token);
-            
-            // Redirect behavior handling protected router states
-            const dest = location.state?.from || `/dashboard`;
-            navigate(dest);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const data = await response.json();
+
+    alert(data.message);
+
+    navigate("/");   // 👈 go to home page
+
+  } catch (error) {
+    console.log(error);
+    alert("Login failed");
+  }
+};
 
     return (
         <div
@@ -74,8 +67,6 @@ const Login = () => {
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
-
-                    {/* Login has no standalone role requirement right now since we resolve role on auth directly, but I'll remove the unused `role` state selection visual from this form to map to standard flows. */}
 
                     {/* Email */}
                     <div className="relative">
@@ -121,23 +112,19 @@ const Login = () => {
                         </span>
                     </div>
 
-                    {/* Error state */}
-                    {error && <p className="text-red-500 text-sm text-center font-semibold">{error}</p>}
-
                     {/* Button */}
                     <button
                         type="submit"
-                        disabled={isLoading}
-                        className={`w-full text-white font-semibold py-3 rounded-xl transition-all ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        className="w-full text-white font-semibold py-3 rounded-xl transition-all"
                         style={{ backgroundColor: "#0277BD" }}
                         onMouseOver={(e) =>
-                            !isLoading && (e.currentTarget.style.backgroundColor = "#01579B")
+                            (e.currentTarget.style.backgroundColor = "#01579B")
                         }
                         onMouseOut={(e) =>
-                            !isLoading && (e.currentTarget.style.backgroundColor = "#0277BD")
+                            (e.currentTarget.style.backgroundColor = "#0277BD")
                         }
                     >
-                        {isLoading ? "Logging in..." : "Log In →"}
+                        Log In →
                     </button>
                 </form>
 

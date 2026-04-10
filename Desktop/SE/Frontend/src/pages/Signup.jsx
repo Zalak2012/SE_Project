@@ -1,12 +1,8 @@
 import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from '../context/AuthContext';
-import { apiSignup } from '../services/mockApi';
+import { Link, useNavigate } from "react-router-dom";
 
 const Signup = () => {
     const navigate = useNavigate();
-    const { state } = useLocation();
-    const { login } = useAuth();
 
     const [formData, setFormData] = useState({
         fullName: "",
@@ -14,48 +10,38 @@ const Signup = () => {
         password: "",
         confirmPassword: "",
     });
-    const [role, setRole] = useState(state?.defaultRole || "patient");
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState("");
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        setError("");
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        if (!formData.fullName || !formData.email || !formData.password) {
-            setError("All fields are required.");
-            return;
-        }
+   const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        if (formData.password !== formData.confirmPassword) {
-            setError("Passwords do not match.");
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const { token, user } = await apiSignup({
+    try {
+        const response = await fetch("http://localhost:8080/api/users/signup", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
                 name: formData.fullName,
                 email: formData.email,
                 password: formData.password,
-                role: role
-            });
-            
-            // Log the user into Context
-            login(user, token);
-            
-            alert("Account created successfully! ✅");
-            navigate("/dashboard");
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+            }),
+        });
+
+        const data = await response.json();
+
+        alert(data.message);
+
+        navigate("/login");
+
+    } catch (error) {
+        console.error(error);
+        alert("Signup failed");
+    }
+};
     return (
         <div
             className="min-h-screen flex items-center justify-center p-4"
@@ -84,27 +70,6 @@ const Signup = () => {
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
-
-                    {/* Role Selector */}
-                    <div className="flex gap-3 mb-4">
-                        {[
-                            { id: "patient", icon: "👶", label: "Patient" },
-                            { id: "doctor", icon: "🩺", label: "Doctor" },
-                            { id: "admin", icon: "🛡️", label: "Admin" }
-                        ].map((r) => (
-                            <button
-                                key={r.id}
-                                type="button"
-                                onClick={() => setRole(r.id)}
-                                className={`flex-1 px-4 py-2 rounded-full border transition-all duration-200 cursor-pointer text-sm flex items-center justify-center gap-2 ${role === r.id
-                                    ? "border-blue-500 bg-blue-100 text-blue-700 font-semibold"
-                                    : "border-gray-300 text-gray-600 hover:border-blue-400"
-                                    }`}
-                            >
-                                <span>{r.icon}</span> {r.label}
-                            </button>
-                        ))}
-                    </div>
 
                     {/* Full Name */}
                     <div className="relative">
@@ -181,23 +146,19 @@ const Signup = () => {
                         <span style={{ color: "#028090" }}>Privacy Policy</span>.
                     </p>
 
-                    {/* Error state */}
-                    {error && <p className="text-red-500 text-sm text-center font-semibold">{error}</p>}
-
                     {/* Button */}
                     <button
                         type="submit"
-                        disabled={isLoading}
-                        className={`w-full text-white font-semibold py-3 rounded-xl transition-all ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        className="w-full text-white font-semibold py-3 rounded-xl transition-all"
                         style={{ backgroundColor: "#0277BD" }}
                         onMouseOver={(e) =>
-                            !isLoading && (e.currentTarget.style.backgroundColor = "#01579B")
+                            (e.currentTarget.style.backgroundColor = "#01579B")
                         }
                         onMouseOut={(e) =>
-                            !isLoading && (e.currentTarget.style.backgroundColor = "#0277BD")
+                            (e.currentTarget.style.backgroundColor = "#0277BD")
                         }
                     >
-                        {isLoading ? "Creating Account..." : "Create Account →"}
+                        Create Account →
                     </button>
                 </form>
 

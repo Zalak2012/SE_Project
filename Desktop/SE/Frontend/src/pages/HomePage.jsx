@@ -1,20 +1,43 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
 import Footer from "../components/Footer";
-import Navbar from '../components/Navbar';
-import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
-    const navigate = useNavigate();
-    const { handleProtectedAction } = useAuth();
     return (
         <div className="min-h-screen bg-white font-sans text-gray-800">
             {/* Header / Navbar */}
-            <Navbar />
+            <header className="sticky top-0 z-50 bg-white border-b border-[#B3E5FC]/50 shadow-sm">
+                <div className="container mx-auto px-4 md:px-8 py-4 flex justify-between items-center max-w-7xl">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-[#01579B] flex items-center justify-center text-white font-bold text-xl">
+                            C
+                        </div>
+                        <span className="text-xl font-bold tracking-tight text-[#01579B]">
+                            Care<span className="text-[#00A896]">Mate</span><span className="text-[#039BE5]">Plus</span>
+                        </span>
+                    </div>
+                    <nav className="hidden md:flex items-center gap-8">
+                        <Link to="/doctors" className="text-gray-600 hover:text-[#0277BD] font-medium transition-colors">Find Doctors</Link>
+                        <a href="#" className="text-gray-600 hover:text-[#0277BD] font-medium transition-colors">Specialties</a>
+                        <a href="#" className="text-gray-600 hover:text-[#0277BD] font-medium transition-colors">AI Checker</a>
+                        <a href="#" className="text-gray-600 hover:text-[#0277BD] font-medium transition-colors">About Us</a>
+                    </nav>
+                    <div className="flex items-center gap-4">
+                        <Link to="/login" className="text-[#0277BD] font-medium hover:text-[#01579B] transition-colors hidden sm:flex items-center gap-2 group">
+                            <svg className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                            Sign In
+                        </Link>
+                        <Link to="/signup" className="bg-[#0277BD] hover:bg-[#01579B] text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                            Get Started
+                        </Link>
+                    </div>
+                </div>
+            </header>
 
             {/* Hero Section */}
-            <HeroSection onProtectedAction={handleProtectedAction} />
+            <HeroSection />
 
             {/* Features Section */}
             <section className="py-24 px-4 md:px-8 container mx-auto max-w-7xl">
@@ -32,7 +55,7 @@ const HomePage = () => {
                 {/* Feature Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {/* Feature Card */}
-                    <Link to="/doctors" onClick={(e) => handleProtectedAction(e, '/doctors')}>
+                    <Link to="/doctors">
                         <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 hover:border-[#039BE5] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:scale-105 group relative overflow-hidden flex flex-col h-full cursor-pointer">
 
                             <div className="w-16 h-16 bg-[#B3E5FC]/50 rounded-2xl flex items-center justify-center mb-6 text-3xl group-hover:bg-[#0277BD] transition-colors duration-300">
@@ -55,7 +78,7 @@ const HomePage = () => {
                     </Link>
 
                     {/* Feature Card */}
-                    <div onClick={(e) => handleProtectedAction(e, '/ai-checker')} className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 hover:border-[#00A896] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:scale-105 group relative overflow-hidden flex flex-col h-full cursor-pointer">
+                    <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 hover:border-[#00A896] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:scale-105 group relative overflow-hidden flex flex-col h-full">
                         <div className="absolute top-0 right-0 bg-[#00A896]/10 w-32 h-32 rounded-bl-full -z-10 group-hover:scale-150 transition-transform duration-500"></div>
                         <div className="w-16 h-16 bg-[#00A896]/10 rounded-2xl flex items-center justify-center mb-6 text-3xl group-hover:bg-[#00A896] transition-colors duration-300">
                             💡
@@ -70,7 +93,7 @@ const HomePage = () => {
                     </div>
 
                     {/* Feature Card */}
-                    <div onClick={(e) => handleProtectedAction(e, '/booking')} className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 hover:border-[#028090] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:scale-105 group relative overflow-hidden flex flex-col h-full cursor-pointer">
+                    <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 hover:border-[#028090] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:scale-105 group relative overflow-hidden flex flex-col h-full">
                         <div className="w-16 h-16 bg-[#028090]/10 rounded-2xl flex items-center justify-center mb-6 text-3xl group-hover:bg-[#028090] transition-colors duration-300">
                             📅
                         </div>
@@ -260,7 +283,7 @@ const HomePage = () => {
 
                     {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-6 animate-[fadeIn_1s_ease-out_0.6s_both]">
-                        <Link to="/signup" className="w-full sm:w-auto inline-flex items-center justify-center bg-white text-[#01579B] px-10 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgba(255,255,255,0.3)] hover:-translate-y-1 hover:scale-105 cursor-pointer">
+                        <Link to="/signup" className="w-full sm:w-auto inline-flex items-center justify-center bg-white text-[#01579B] px-10 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgba(255,255,255,0.3)] hover:-translate-y-1 hover:scale-105">
                             Get Started Free
                         </Link>
                         <Link to="/doctors" className="w-full sm:w-auto inline-flex items-center justify-center bg-transparent border-2 border-white/40 text-white px-10 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:bg-white hover:text-[#028090] hover:border-white hover:-translate-y-1 hover:scale-105 hover:shadow-xl">

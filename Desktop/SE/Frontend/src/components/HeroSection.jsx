@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const HeroSection = ({ onProtectedAction }) => {
+const HeroSection = () => {
     return (
         <section className="bg-[#B3E5FC]/20 py-16 md:py-24 relative overflow-hidden">
             <div className="container mx-auto px-4 md:px-8 max-w-7xl">
@@ -28,16 +28,16 @@ const HeroSection = ({ onProtectedAction }) => {
                                 placeholder="Search doctors, specializations..."
                                 className="w-full px-3 text-gray-700 bg-transparent outline-none"
                             />
-                            <Link to="/doctors" onClick={(e) => onProtectedAction && onProtectedAction(e, '/doctors')} className="bg-[#0277BD] hover:bg-[#01579B] text-white px-6 py-2 rounded-full transition-colors duration-300 font-medium whitespace-nowrap">
+                            <Link to="/doctors" className="bg-[#0277BD] hover:bg-[#01579B] text-white px-6 py-2 rounded-full transition-colors duration-300 font-medium whitespace-nowrap">
                                 Search
                             </Link>
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-4 pt-2 animate-[fadeIn_1s_ease-out_0.6s_both]">
-                            <button onClick={(e) => onProtectedAction && onProtectedAction(e, '/ai-checker')} className="flex items-center justify-center gap-2 bg-[#00A896] hover:bg-[#028090] text-white px-8 py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 font-medium">
+                            <button className="flex items-center justify-center gap-2 bg-[#00A896] hover:bg-[#028090] text-white px-8 py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 font-medium">
                                 🤖 AI Symptom Checker
                             </button>
-                            <Link to="/doctors" onClick={(e) => onProtectedAction && onProtectedAction(e, '/doctors')} className="flex items-center justify-center gap-2 bg-white text-[#0277BD] border-2 border-[#B3E5FC] hover:border-[#039BE5] hover:bg-gray-50 px-8 py-3 rounded-xl transition-all duration-300 hover:-translate-y-1 font-medium">
+                            <Link to="/doctors" className="flex items-center justify-center gap-2 bg-white text-[#0277BD] border-2 border-[#B3E5FC] hover:border-[#039BE5] hover:bg-gray-50 px-8 py-3 rounded-xl transition-all duration-300 hover:-translate-y-1 font-medium">
                                 Browse Doctors
                             </Link>
                         </div>
@@ -108,7 +108,7 @@ const HeroSection = ({ onProtectedAction }) => {
                                     </div>
                                 </div>
 
-                                <button onClick={(e) => onProtectedAction && onProtectedAction(e, '/booking')} className="w-full bg-[#0277BD] hover:bg-[#01579B] text-white py-3.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex justify-center items-center gap-2 group">
+                                <button className="w-full bg-[#0277BD] hover:bg-[#01579B] text-white py-3.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex justify-center items-center gap-2 group">
                                     Book Appointment ➔
                                 </button>
                             </div>
