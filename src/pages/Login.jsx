@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
 import { apiLogin } from '../services/mockApi';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -12,6 +13,8 @@ const Login = () => {
         email: "",
         password: "",
     });
+    const [role, setRole] = useState("patient");
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -36,7 +39,12 @@ const Login = () => {
             login(user, token);
             
             // Redirect behavior handling protected router states
-            const dest = location.state?.from || `/dashboard`;
+            let dest = location.state?.from;
+            if (!dest) {
+                if (user.role === 'admin') dest = '/admin-dashboard';
+                else if (user.role === 'doctor') dest = '/doctor-dashboard';
+                else dest = '/dashboard';
+            }
             navigate(dest);
         } catch (err) {
             setError(err.message);
@@ -75,7 +83,26 @@ const Login = () => {
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
 
-                    {/* Login has no standalone role requirement right now since we resolve role on auth directly, but I'll remove the unused `role` state selection visual from this form to map to standard flows. */}
+                    {/* Role Selector */}
+                    <div className="flex gap-3 mb-4">
+                        {[
+                            { id: "patient", icon: "👶", label: "Patient" },
+                            { id: "doctor", icon: "🩺", label: "Doctor" },
+                            { id: "admin", icon: "🛡️", label: "Admin" }
+                        ].map((r) => (
+                            <button
+                                key={r.id}
+                                type="button"
+                                onClick={() => setRole(r.id)}
+                                className={`flex-1 px-4 py-2 rounded-full border transition-all duration-200 cursor-pointer text-sm flex items-center justify-center gap-2 ${role === r.id
+                                    ? "border-[#0277BD] bg-[#E1F5FE] text-[#0277BD] font-semibold shadow-sm"
+                                    : "border-gray-200 text-gray-500 hover:border-[#42A5F5] hover:text-[#0277BD]"
+                                    }`}
+                            >
+                                <span>{r.icon}</span> {r.label}
+                            </button>
+                        ))}
+                    </div>
 
                     {/* Email */}
                     <div className="relative">
@@ -98,17 +125,24 @@ const Login = () => {
                     <div className="relative">
                         <span className="absolute left-3 top-3 text-gray-400">🔒</span>
                         <input
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             name="password"
                             placeholder="Enter your password"
                             value={formData.password}
                             onChange={handleChange}
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2"
+                            className="w-full pl-10 pr-12 py-3 rounded-xl border focus:outline-none focus:ring-2"
                             style={{
                                 borderColor: "#B3E5FC",
                                 "--tw-ring-color": "#039BE5",
                             }}
                         />
+                        <button 
+                            type="button" 
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-3.5 text-gray-400 hover:text-[#0277BD] transition-colors"
+                        >
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
                     </div>
 
                     {/* Forgot Password */}

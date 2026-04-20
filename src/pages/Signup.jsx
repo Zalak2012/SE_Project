@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
 import { apiSignup } from '../services/mockApi';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Signup = () => {
     const navigate = useNavigate();
@@ -15,6 +16,8 @@ const Signup = () => {
         confirmPassword: "",
     });
     const [role, setRole] = useState(state?.defaultRole || "patient");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -49,7 +52,13 @@ const Signup = () => {
             login(user, token);
             
             alert("Account created successfully! ✅");
-            navigate("/dashboard");
+            
+            // Redirect based on selected/assigned role
+            let dest = '/dashboard';
+            if (user.role === 'admin') dest = '/admin-dashboard';
+            else if (user.role === 'doctor') dest = '/doctor-dashboard';
+            
+            navigate(dest);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -144,34 +153,48 @@ const Signup = () => {
                     <div className="relative">
                         <span className="absolute left-3 top-3 text-gray-400">🔒</span>
                         <input
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             name="password"
                             placeholder="Create a strong password"
                             value={formData.password}
                             onChange={handleChange}
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2"
+                            className="w-full pl-10 pr-12 py-3 rounded-xl border focus:outline-none focus:ring-2"
                             style={{
                                 borderColor: "#B3E5FC",
                                 "--tw-ring-color": "#039BE5",
                             }}
                         />
+                        <button 
+                            type="button" 
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-3.5 text-gray-400 hover:text-[#0277BD] transition-colors"
+                        >
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
                     </div>
 
                     {/* Confirm Password */}
                     <div className="relative">
                         <span className="absolute left-3 top-3 text-gray-400">🔒</span>
                         <input
-                            type="password"
+                            type={showConfirmPassword ? "text" : "password"}
                             name="confirmPassword"
                             placeholder="Confirm your password"
                             value={formData.confirmPassword}
                             onChange={handleChange}
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2"
+                            className="w-full pl-10 pr-12 py-3 rounded-xl border focus:outline-none focus:ring-2"
                             style={{
                                 borderColor: "#B3E5FC",
                                 "--tw-ring-color": "#039BE5",
                             }}
                         />
+                         <button 
+                            type="button" 
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-3.5 text-gray-400 hover:text-[#0277BD] transition-colors"
+                        >
+                            {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
                     </div>
 
                     {/* Terms */}
