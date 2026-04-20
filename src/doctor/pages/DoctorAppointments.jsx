@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 
 const DoctorAppointments = () => {
-    const { appointments, cancelAppointment } = useData();
+    const { appointments, cancelAppointment, addReview } = useData();
     const [filter, setFilter] = useState('All');
 
     const filters = ['All', 'Upcoming', 'Completed', 'Cancelled'];
@@ -75,7 +75,7 @@ const DoctorAppointments = () => {
                                 {appt.status}
                             </span>
                             
-                            {/* Cancel Button */}
+                            {/* Cancel Button - Upcoming */}
                             {appt.status === 'upcoming' && (
                                 <button 
                                     onClick={() => cancelAppointment(appt.id)}

@@ -9,6 +9,8 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
         { name: 'Dashboard', path: '/admin-dashboard', icon: '📊' },
         { name: 'Manage Users', path: '/admin/manage-users', icon: '👥' },
         { name: 'Doctor Approvals', path: '/admin/approvals', icon: '👨‍⚕️' },
+        { name: 'Manage Lab Tests', path: '/admin/lab-tests', icon: '🧪' },
+        { name: 'Manage Reviews', path: '/admin/reviews', icon: '⭐' },
         { name: 'Appointments', path: '/admin/appointments', icon: '📅' },
         { name: 'Analytics', path: '/admin/analytics', icon: '📈' },
     ];

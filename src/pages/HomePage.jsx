@@ -4,10 +4,16 @@ import HeroSection from '../components/HeroSection';
 import Footer from "../components/Footer";
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 
 const HomePage = () => {
     const navigate = useNavigate();
     const { handleProtectedAction } = useAuth();
+    const { reviews } = useData();
+
+    // Filter to only approved reviews, show maximum 3 for styling
+    const approvedReviews = reviews.filter(r => r.status === 'Approved').slice(0, 3);
+
     return (
         <div className="min-h-screen bg-white font-sans text-gray-800">
             {/* Header / Navbar */}
@@ -179,62 +185,37 @@ const HomePage = () => {
 
                 {/* Testimonials Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* Testimonial 1 */}
-                    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300">
-                        <div className="flex gap-1 text-yellow-400 mb-4 text-sm">
-                            ★★★★★
-                        </div>
-                        <p className="text-gray-700 mb-8 leading-relaxed italic">
-                            "The platform is incredibly easy to use. I was able to find a specialist and book an appointment for my mother within just 5 minutes. Highly recommended!"
-                        </p>
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200 shrink-0">
-                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80" alt="Sarah Jenkins" className="w-full h-full object-cover" />
+                    {approvedReviews.length > 0 ? (
+                        approvedReviews.map((review, index) => (
+                            <div key={index} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300">
+                                <div className="flex gap-1 text-yellow-400 mb-4 text-sm">
+                                    {"⭐".repeat(review.rating)}
+                                </div>
+                                <p className="text-gray-700 mb-8 leading-relaxed italic line-clamp-4">
+                                    "{review.text}"
+                                </p>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full overflow-hidden border border-[#E1F5FE] bg-[#E1F5FE] flex items-center justify-center shrink-0">
+                                        {review.avatar ? (
+                                            <img src={review.avatar} alt={review.userName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-[#0277BD] font-bold text-xl">{review.userName.charAt(0)}</span>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-gray-800 text-sm max-w-[150px] truncate">{review.userName}</h4>
+                                        <p className={`text-xs font-medium ${review.userType === 'Doctor' ? 'text-[#00A896]' : 'text-gray-500'}`}>
+                                            {review.userType}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <h4 className="font-bold text-gray-800 text-sm">Sarah Jenkins</h4>
-                                <p className="text-xs text-gray-500 font-medium">Patient</p>
-                            </div>
+                        ))
+                    ) : (
+                        <div className="col-span-1 md:col-span-3 text-center text-gray-500 py-12 italic">
+                            New testimonials matching your experience are being curated!
                         </div>
-                    </div>
-
-                    {/* Testimonial 2 */}
-                    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300">
-                        <div className="flex gap-1 text-yellow-400 mb-4 text-sm">
-                            ★★★★★
-                        </div>
-                        <p className="text-gray-700 mb-8 leading-relaxed italic">
-                            "CareMatePlus has completely streamlined my clinic's workflow. The digital records and easy scheduling system give me more time to focus on actual patient care."
-                        </p>
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200 shrink-0">
-                                <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80" alt="Dr. Marcus Thorne" className="w-full h-full object-cover" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-800 text-sm">Dr. Marcus Thorne</h4>
-                                <p className="text-xs text-[#00A896] font-medium">Cardiologist</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Testimonial 3 */}
-                    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300">
-                        <div className="flex gap-1 text-yellow-400 mb-4 text-sm">
-                            ★★★★★
-                        </div>
-                        <p className="text-gray-700 mb-8 leading-relaxed italic">
-                            "The AI symptom checker is remarkably accurate! It guided me to the right type of doctor when I wasn't sure what my symptoms meant. True peace of mind."
-                        </p>
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200 shrink-0">
-                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80" alt="David Chen" className="w-full h-full object-cover" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-800 text-sm">David Chen</h4>
-                                <p className="text-xs text-gray-500 font-medium">Patient</p>
-                            </div>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </section>
 

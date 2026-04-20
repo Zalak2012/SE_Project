@@ -8,7 +8,7 @@ const BookingPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { isAuth, handleProtectedAction } = useAuth();
-    
+
     // In a real app, verify isAuth and redirect if false (though handleProtectedAction handles this usually)
     // Actually, App.jsx / Navigation should protect this route. 
     // We will do a strict check here.
@@ -45,8 +45,13 @@ const BookingPage = () => {
 
     const handleProceedToPayment = () => {
         if (!isComplete) return;
-        alert(`Proceeding to payment Gateway for ₹${doctor.fee}...`);
-        // navigate('/payment');
+        navigate('/payment', { 
+            state: { 
+                doctor: doctor, 
+                date: new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), 
+                time: selectedTime 
+            } 
+        });
     };
 
     return (
@@ -63,7 +68,7 @@ const BookingPage = () => {
                 </div>
 
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 mb-8 animate-[fadeIn_0.5s_ease-out_both] flex flex-col md:flex-row gap-8">
-                    
+
                     {/* STEP 1: Doctor Details */}
                     <div className="md:w-1/3 border-r border-gray-100 pr-0 md:pr-8">
                         <div className="flex flex-col items-center text-center">
@@ -91,10 +96,10 @@ const BookingPage = () => {
                         {/* STEP 2: Date Selection */}
                         <div className="mb-8">
                             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                <span className="bg-[#E1F5FE] text-[#0277BD] w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span> 
+                                <span className="bg-[#E1F5FE] text-[#0277BD] w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
                                 Select Date
                             </h3>
-                            
+
                             <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x">
                                 {upcomingDates.map((date, idx) => {
                                     const isSelected = selectedDate === date.toISOString();
@@ -103,7 +108,7 @@ const BookingPage = () => {
                                     const monthName = date.toLocaleDateString('en-US', { month: 'short' });
 
                                     return (
-                                        <button 
+                                        <button
                                             key={idx}
                                             onClick={() => { setSelectedDate(date.toISOString()); setSelectedTime(null); }}
                                             className={`snap-center flex-shrink-0 w-20 py-4 rounded-2xl border flex flex-col items-center justify-center transition-all ${isSelected ? 'border-[#028090] bg-[#028090] text-white shadow-md transform -translate-y-1' : 'border-gray-200 bg-white text-gray-600 hover:border-[#028090] hover:bg-[#F8FAFC]'}`}
@@ -120,15 +125,15 @@ const BookingPage = () => {
                         {/* STEP 3: Time Slots */}
                         <div className={`transition-opacity duration-300 ${selectedDate ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
                             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                <span className={`${selectedDate ? 'bg-[#E1F5FE] text-[#0277BD]' : 'bg-gray-100 text-gray-400'} w-6 h-6 rounded-full flex items-center justify-center text-sm transition-colors`}>2</span> 
+                                <span className={`${selectedDate ? 'bg-[#E1F5FE] text-[#0277BD]' : 'bg-gray-100 text-gray-400'} w-6 h-6 rounded-full flex items-center justify-center text-sm transition-colors`}>2</span>
                                 Select Time
                             </h3>
-                            
+
                             <div className="mb-4">
                                 <p className="text-sm font-semibold text-gray-500 mb-3">Morning Slots</p>
                                 <div className="flex flex-wrap gap-3">
                                     {mngSlots.map(time => (
-                                        <button 
+                                        <button
                                             key={time}
                                             onClick={() => setSelectedTime(time)}
                                             className={`px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${selectedTime === time ? 'border-[#00A896] bg-[#00A896] text-white shadow-sm' : 'border-gray-200 bg-white text-gray-700 hover:border-[#00A896] hover:bg-[#E6F4EA]'}`}
@@ -138,12 +143,12 @@ const BookingPage = () => {
                                     ))}
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <p className="text-sm font-semibold text-gray-500 mb-3 mt-6">Afternoon Slots</p>
                                 <div className="flex flex-wrap gap-3">
                                     {aftSlots.map(time => (
-                                        <button 
+                                        <button
                                             key={time}
                                             onClick={() => setSelectedTime(time)}
                                             className={`px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${selectedTime === time ? 'border-[#00A896] bg-[#00A896] text-white shadow-sm' : 'border-gray-200 bg-white text-gray-700 hover:border-[#00A896] hover:bg-[#E6F4EA]'}`}
