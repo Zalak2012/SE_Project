@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 
 const DoctorAppointments = () => {
-    const { appointments, cancelAppointment, addReview } = useData();
+    const { appointments, cancelAppointment, completeAppointment, addReview } = useData();
     const [filter, setFilter] = useState('All');
 
     const filters = ['All', 'Upcoming', 'Completed', 'Cancelled'];
@@ -18,6 +18,22 @@ const DoctorAppointments = () => {
             case 'completed': return 'bg-[#10b981]/10 text-[#10b981]';
             case 'cancelled': return 'bg-[#ef4444]/10 text-[#ef4444]';
             default: return 'bg-gray-100 text-[#6b7280]';
+        }
+    };
+
+    const handleComplete = (id) => {
+        if(window.confirm("Are you sure you want to mark this consultation as completed?")) {
+            completeAppointment(id);
+            // Optional UX Toast Simulation
+            const notification = document.createElement("div");
+            notification.innerText = "✅ Appointment marked as completed";
+            notification.className = "fixed bottom-5 right-5 bg-green-50 text-green-700 font-bold px-6 py-3 rounded-2xl shadow-lg border border-green-200 z-50 animate-[slideUp_0.4s_ease-out]";
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.5s';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
         }
     };
 
@@ -75,14 +91,22 @@ const DoctorAppointments = () => {
                                 {appt.status}
                             </span>
                             
-                            {/* Cancel Button - Upcoming */}
+                            {/* Action Buttons - Upcoming */}
                             {appt.status === 'upcoming' && (
-                                <button 
-                                    onClick={() => cancelAppointment(appt.id)}
-                                    className="px-5 py-2 bg-[#ffffff] text-[#ef4444] hover:bg-[#ef4444]/10 border border-[#ef4444]/30 hover:border-[#ef4444] text-sm font-medium rounded-full transition-all shadow-sm"
-                                >
-                                    Cancel
-                                </button>
+                                <div className="flex flex-wrap gap-2 md:justify-end mt-4 md:mt-0">
+                                    <button 
+                                        onClick={() => cancelAppointment(appt.id)}
+                                        className="px-5 py-2 bg-[#ffffff] text-[#ef4444] hover:bg-[#ef4444]/10 border border-[#ef4444]/30 hover:border-[#ef4444] text-sm font-medium rounded-full transition-all shadow-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        onClick={() => handleComplete(appt.id)}
+                                        className="px-5 py-2 bg-gradient-to-r from-[#10b981] to-[#059669] text-white hover:shadow-lg hover:-translate-y-0.5 text-sm font-bold rounded-full transition-all shadow-sm"
+                                    >
+                                        Mark as Completed
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </div>

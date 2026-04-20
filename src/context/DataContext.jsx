@@ -183,6 +183,10 @@ export const DataProvider = ({ children }) => {
         setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'cancelled' } : a));
     };
 
+    const completeAppointment = (id) => {
+        setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'completed' } : a));
+    };
+
     // Prescription actions
     const addPrescription = (prescription) => {
         setPrescriptions(prev => [{ ...prescription, id: Date.now() }, ...prev]);
@@ -204,6 +208,7 @@ export const DataProvider = ({ children }) => {
         appointments,
         addAppointment,
         cancelAppointment,
+        completeAppointment,
         medicalRecords,
         prescriptions,
         addPrescription,
