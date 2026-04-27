@@ -82,7 +82,7 @@ if (process.env.NODE_ENV === "production") {
   console.log("📂 Serving static files from:", frontendPath);
   app.use(express.static(frontendPath));
 
-  app.get("*", (req, res) => {
+  app.get("(.*)", (req, res) => {
     if (req.url.startsWith("/api")) {
       return res.status(404).json({ message: "API route not found" });
     }
