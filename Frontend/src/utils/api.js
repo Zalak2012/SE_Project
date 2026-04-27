@@ -28,7 +28,8 @@ export const apiFetch = async (endpoint, options = {}) => {
 
         // Global 401 Handling: Logout user if token expired
         if (response.status === 401) {
-            const data = await response.json().catch(() => ({}));
+            const clonedResponse = response.clone();
+            const data = await clonedResponse.json().catch(() => ({}));
             if (data.message === "Token expired" || data.message === "Invalid token") {
                 console.warn("🔐 Auth Error: Session expired. Logging out...");
                 localStorage.removeItem("token");
