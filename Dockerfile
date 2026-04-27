@@ -1,6 +1,6 @@
 # Stage 1: Build Frontend
 FROM node:20-alpine AS frontend-builder
-WORKDIR /app/frontend
+WORKDIR /app/Frontend
 # Copy only package files first for better caching
 COPY Frontend/package*.json ./
 RUN npm ci
@@ -10,7 +10,7 @@ RUN npm run build
 
 # Stage 2: Build Backend
 FROM node:20-alpine AS backend-builder
-WORKDIR /app/backend
+WORKDIR /app/Backend
 # Install build dependencies for native modules (like bcrypt)
 RUN apk add --no-cache python3 make g++
 # Copy only package files first
@@ -21,16 +21,16 @@ COPY Backend/ ./
 
 # Stage 3: Final Production Image
 FROM node:20-alpine
-WORKDIR /app/backend
+WORKDIR /app/Backend
 
 # Create uploads directory with correct permissions for the non-root user
 RUN mkdir -p uploads && chown -R node:node /app
 
 # Copy production dependencies and source from backend-builder
-COPY --from=backend-builder --chown=node:node /app/backend ./
+COPY --from=backend-builder --chown=node:node /app/Backend ./
 
-# Copy built frontend assets to the expected path (../Frontend/dist relative to /app/backend)
-COPY --from=frontend-builder --chown=node:node /app/frontend/dist /app/Frontend/dist
+# Copy built frontend assets to the expected path (../Frontend/dist relative to /app/Backend)
+COPY --from=frontend-builder --chown=node:node /app/Frontend/dist /app/Frontend/dist
 
 # Set environment variables
 ENV NODE_ENV=production

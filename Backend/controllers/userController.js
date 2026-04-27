@@ -1,6 +1,6 @@
 // controllers/userController.js
 
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
@@ -453,9 +453,9 @@ exports.forgotPassword = async (req, res) => {
 
     await user.save();
 
-    // Create reset URL
-    // In production, this should be your frontend URL
-    const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
+    // Create reset URL using environment variable
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     const message = `You are receiving this email because you (or someone else) have requested the reset of a password. Please make a POST request to: \n\n ${resetUrl}`;
 
