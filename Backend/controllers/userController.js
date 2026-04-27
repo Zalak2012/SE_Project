@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const logActivity = require("../utils/logActivity");
+const sendEmail = require("../utils/emailSender");
+const crypto = require("crypto");
 
 // ================= HELPER: Generate JWT =================
 const generateToken = (user) => {
@@ -79,6 +81,10 @@ exports.signupUser = async (req, res) => {
     let isApproved = finalRole === "doctor" ? false : true;
     let status = finalRole === "doctor" ? "pending" : "approved";
 
+    // ✅ Generate Verification OTP
+    const verificationOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
     const newUser = new User({
       name,
       email,
@@ -86,6 +92,8 @@ exports.signupUser = async (req, res) => {
       role: finalRole,
       isApproved,
       status,
+      verificationToken: verificationOTP,
+      verificationTokenExpires: otpExpires
     });
 
     console.log("⏳ Saving user to MongoDB...");
@@ -94,7 +102,6 @@ exports.signupUser = async (req, res) => {
 
     try {
       savedUser = await newUser.save();
-
       console.log("✅ User SAVED in DB:", {
         id: savedUser._id,
         email: savedUser.email,
@@ -103,6 +110,28 @@ exports.signupUser = async (req, res) => {
     } catch (err) {
       console.error("❌ USER SAVE FAILED:", err.message);
       return res.status(500).json({ message: "User not saved" });
+    }
+
+    // ✅ Send Verification Email
+    try {
+      await sendEmail({
+        email: savedUser.email,
+        subject: "Verify your CareMatePlus Account",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 10px; padding: 20px;">
+            <h2 style="color: #01579B; text-align: center;">Welcome to CareMatePlus!</h2>
+            <p>Hello <strong>${savedUser.name}</strong>,</p>
+            <p>Thank you for joining our platform. To complete your registration, please use the verification code below:</p>
+            <div style="background-color: #f0fdfc; border: 2px dashed #028090; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #028090;">${verificationOTP}</span>
+            </div>
+            <p>This code will expire in 10 minutes.</p>
+            <p style="color: #777; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; pt: 10px;">If you didn't create an account, you can safely ignore this email.</p>
+          </div>
+        `
+      });
+    } catch (emailErr) {
+      console.error("❌ EMAIL SEND FAILED:", emailErr.message);
     }
 
     // ✅ Log activity
@@ -125,19 +154,10 @@ exports.signupUser = async (req, res) => {
       });
     }
 
-    // ✅ Generate token
-    const token = generateToken(savedUser);
-
     res.status(201).json({
-      token,
-      user: {
-        _id: savedUser._id,
-        name: savedUser.name,
-        email: savedUser.email,
-        role: savedUser.role,
-        status: savedUser.status,
-        isApproved: savedUser.isApproved
-      }
+      message: "Registration successful. Please check your email for the verification code.",
+      email: savedUser.email,
+      requiresVerification: true
     });
 
   } catch (error) {
@@ -145,6 +165,92 @@ exports.signupUser = async (req, res) => {
     res.status(500).json({
       message: "Error registering user",
     });
+  }
+};
+
+// ================= VERIFY EMAIL =================
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
+
+    const user = await User.findOne({ 
+      email, 
+      verificationToken: otp,
+      verificationTokenExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    user.isEmailVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+    const token = generateToken(user);
+
+    res.status(200).json({
+      message: "Email verified successfully",
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        isApproved: user.isApproved
+      }
+    });
+  } catch (error) {
+    console.error("❌ Verification error:", error);
+    res.status(500).json({ message: "Error verifying email" });
+  }
+};
+
+// ================= RESEND OTP =================
+exports.resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: "Email is already verified" });
+    }
+
+    const verificationOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    user.verificationToken = verificationOTP;
+    user.verificationTokenExpires = Date.now() + 10 * 60 * 1000;
+    await user.save();
+
+    await sendEmail({
+      email: user.email,
+      subject: "New Verification Code - CareMatePlus",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 10px; padding: 20px;">
+          <h2 style="color: #01579B; text-align: center;">New Verification Code</h2>
+          <p>Hello <strong>${user.name}</strong>,</p>
+          <p>You requested a new verification code. Please use the code below to verify your account:</p>
+          <div style="background-color: #f0fdfc; border: 2px dashed #028090; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #028090;">${verificationOTP}</span>
+          </div>
+          <p>This code will expire in 10 minutes.</p>
+        </div>
+      `
+    });
+
+    res.status(200).json({ message: "Verification code resent successfully" });
+  } catch (error) {
+    console.error("❌ Resend OTP error:", error);
+    res.status(500).json({ message: "Error resending OTP" });
   }
 };
 

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+import { apiFetch } from '../utils/api';
+
 const Navbar = () => {
     const { isAuth, role, currentUser, logout, handleProtectedAction } = useAuth();
     const navigate = useNavigate();
@@ -13,6 +15,8 @@ const Navbar = () => {
     
     // Auth Dropdown State
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [notifications, setNotifications] = useState([]);
     const dropdownRef = useRef(null);
     const sidebarRef = useRef(null);
 
@@ -36,10 +40,42 @@ const Navbar = () => {
     useEffect(() => {
         setShowSidebar(false);
         setShowProfileDropdown(false);
+        setShowNotifications(false);
     }, [location.pathname]);
 
+    useEffect(() => {
+        if (!isAuth || !currentUser) return;
+        const fetchNotifications = async () => {
+            try {
+                const res = await apiFetch("/api/notifications");
+                if (res.ok) {
+                    setNotifications(await res.json());
+                }
+            } catch (err) {
+                console.error("Notifications fetch error:", err);
+            }
+        };
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
+    }, [isAuth, currentUser]);
+
     // UI Handle Profile Dropdown
-    const toggleProfileDropdown = () => setShowProfileDropdown(!showProfileDropdown);
+    const toggleProfileDropdown = () => {
+        setShowProfileDropdown(!showProfileDropdown);
+        setShowNotifications(false);
+    };
+
+    const toggleNotifications = async () => {
+        setShowNotifications(!showNotifications);
+        setShowProfileDropdown(false);
+        if (!showNotifications && notifications.some(n => !n.isRead)) {
+            try {
+                await apiFetch("/api/notifications/mark-read", { method: "POST" });
+                setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            } catch (e) {}
+        }
+    };
 
     return (
         <>
@@ -99,7 +135,7 @@ const Navbar = () => {
                             C
                         </div>
                         <span className="text-xl font-bold tracking-tight text-[#01579B]">
-                            Care<span className="text-[#00A896]">Mate</span>
+                            Care<span className="text-[#00A896]">MatePlus</span>
                         </span>
                     </div>
                     <button onClick={() => setShowSidebar(false)} className="text-gray-500 hover:text-gray-800 focus:outline-none">
@@ -183,7 +219,7 @@ const Navbar = () => {
                                 C
                             </div>
                             <span className="text-xl md:text-2xl font-bold tracking-tight text-[#01579B]">
-                                Care<span className="text-[#00A896]">Mate</span><span className="text-[#039BE5]">Plus</span>
+                                Care<span className="text-[#00A896]">MatePlus</span>
                             </span>
                         </Link>
                     </div>
@@ -199,7 +235,48 @@ const Navbar = () => {
                     {/* RIGHT SIDE: Authentication Area */}
                     <div className="flex items-center gap-3 flex-1 justify-end">
                         {isAuth ? (
-                            <div className="relative" ref={dropdownRef}>
+                            <div className="flex items-center gap-2" ref={dropdownRef}>
+                                {/* Notifications Button */}
+                                <div className="relative">
+                                    <button 
+                                        onClick={toggleNotifications}
+                                        className="relative p-2 text-gray-500 hover:text-[#01579B] hover:bg-blue-50 rounded-full transition-colors focus:outline-none"
+                                    >
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                        {notifications.filter(n => !n.isRead).length > 0 && (
+                                            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
+                                        )}
+                                    </button>
+                                    
+                                    {/* Notifications Dropdown */}
+                                    {showNotifications && (
+                                        <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 transform transition-all duration-200 z-50 overflow-hidden">
+                                            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                                                <h3 className="font-bold text-gray-800">Notifications</h3>
+                                                <span className="text-xs font-semibold bg-[#E1F5FE] text-[#01579B] px-2 py-1 rounded-lg">
+                                                    {notifications.length}
+                                                </span>
+                                            </div>
+                                            <div className="max-h-80 overflow-y-auto">
+                                                {notifications.length > 0 ? (
+                                                    notifications.map(n => (
+                                                        <div key={n._id} className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors ${!n.isRead ? 'bg-blue-50/30' : ''}`}>
+                                                            <p className="text-sm font-bold text-gray-800">{n.title}</p>
+                                                            <p className="text-xs text-gray-500 mt-1">{n.message}</p>
+                                                            <p className="text-[10px] text-gray-400 mt-2 font-semibold uppercase tracking-wider">{new Date(n.createdAt).toLocaleString()}</p>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="p-6 text-center text-gray-500 text-sm font-medium">
+                                                        No notifications yet
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="relative">
                                 {/* Profile Avatar Button */}
                                 <button 
                                     onClick={toggleProfileDropdown}
@@ -250,6 +327,7 @@ const Navbar = () => {
                                             Logout
                                         </button>
                                     </div>
+                                </div>
                                 </div>
                             </div>
                         ) : (

@@ -15,8 +15,12 @@ const medicalRecordRoutes = require("./routes/medicalRecordRoutes");
 const prescriptionRoutes = require("./routes/prescriptionRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
+const labTestRoutes = require("./routes/labTestRoutes");
 const User = require("./models/User");
 const seedAdmin = require("./utils/seedAdmin");
+const seedLabTests = require("./utils/seedLabTests");
 
 const app = express();
 
@@ -68,6 +72,9 @@ app.use("/api/medical-records", medicalRecordRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/schedule", scheduleRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/labtests", labTestRoutes);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI);
@@ -80,6 +87,7 @@ mongoose.connection.on("connected", () => {
   console.log("MongoDB connected ✅");
 
   seedAdmin();
+  seedLabTests();
 
   const PORT = process.env.PORT || 5000;
 

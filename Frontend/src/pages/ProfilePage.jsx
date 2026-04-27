@@ -26,7 +26,7 @@ const ProfilePage = () => {
     // Dummy data for visited doctors
     const visitedDoctors = [
         { id: 1, name: "Dr. Sarah Mitchell", specialty: "Cardiologist", date: "Mar 15, 2026", type: "In-Person Clinic" },
-        { id: 2, name: "Dr. James Wilson", specialty: "Neurologist", date: "Feb 02, 2026", type: "Video Consultation" },
+        { id: 2, name: "Dr. James Wilson", specialty: "Neurologist", date: "Feb 02, 2026", type: "General Consultation" },
     ];
 
     return (

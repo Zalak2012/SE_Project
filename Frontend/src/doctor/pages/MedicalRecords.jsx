@@ -11,10 +11,30 @@ const MedicalRecords = () => {
     const fetchRecords = async () => {
         try {
             setLoading(true);
-            const res = await apiFetch("/api/medical-records");
-            if (res.ok) {
-                setMedicalRecords(await res.json());
+            const [recordsRes, prescriptionsRes] = await Promise.all([
+                apiFetch("/api/medical-records"),
+                apiFetch("/api/prescriptions")
+            ]);
+            
+            let combined = [];
+            if (recordsRes.ok) {
+                const records = await recordsRes.json();
+                combined = [...combined, ...records.map(r => ({ ...r, type: 'Record' }))];
             }
+            if (prescriptionsRes.ok) {
+                const prescriptions = await prescriptionsRes.json();
+                combined = [...combined, ...prescriptions.map(p => ({ 
+                    ...p, 
+                    type: 'Prescription', 
+                    title: p.medicineName, 
+                    description: p.notes || 'Prescription details...' 
+                }))];
+            }
+            
+            // Sort by descending date
+            combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            setMedicalRecords(combined);
         } catch (err) {
             console.error("Records fetch error:", err);
         } finally {
@@ -88,12 +108,14 @@ const MedicalRecords = () => {
 
                                 <div className="w-full md:w-1/4 flex items-center justify-between md:justify-end gap-4 shrink-0 mt-2 md:mt-0">
                                     <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide border ${
-                                        record.status === 'Recovered' 
-                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50' 
-                                            : 'bg-orange-50 text-orange-700 border-orange-200/50'
+                                        record.type === 'Prescription'
+                                            ? 'bg-blue-50 text-blue-700 border-blue-200/50'
+                                            : record.status === 'Recovered' 
+                                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50' 
+                                                : 'bg-orange-50 text-orange-700 border-orange-200/50'
                                     }`}>
-                                        {record.status === 'Recovered' ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                                        {record.status}
+                                        {record.type === 'Prescription' ? <FileText className="w-3.5 h-3.5" /> : record.status === 'Recovered' ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                                        {record.type === 'Prescription' ? 'Prescription' : record.status}
                                     </div>
                                     <button 
                                         onClick={() => setSelectedRecord(record)}
@@ -131,7 +153,9 @@ const MedicalRecords = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-black text-gray-900 text-lg">{selectedRecord.patientId?.name || "Patient"}</h3>
-                                    <p className="text-sm font-bold text-blue-600 mt-0.5 uppercase tracking-wider">Condition: {selectedRecord.condition}</p>
+                                    <p className="text-sm font-bold text-blue-600 mt-0.5 uppercase tracking-wider">
+                                        {selectedRecord.type === 'Prescription' ? 'Type: Prescription' : `Condition: ${selectedRecord.condition}`}
+                                    </p>
                                 </div>
                             </div>
                             
@@ -139,6 +163,20 @@ const MedicalRecords = () => {
                                 <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Clinical Description</h4>
                                 <p className="text-gray-700 font-medium leading-relaxed bg-gray-50 p-5 rounded-2xl border border-gray-100">{selectedRecord.description}</p>
                             </div>
+
+                            {selectedRecord.type === 'Prescription' && selectedRecord.medicines && (
+                                <div className="space-y-2">
+                                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Medicines prescribed</h4>
+                                    <ul className="bg-gray-50 p-5 rounded-2xl border border-gray-100 space-y-3">
+                                        {selectedRecord.medicines.map((med, idx) => (
+                                            <li key={idx} className="flex justify-between border-b border-gray-200 pb-2 last:border-0 last:pb-0">
+                                                <span className="font-bold text-gray-800">{med.name}</span>
+                                                <span className="text-gray-600 font-medium">{med.dosage}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
 
                         <div className="px-8 py-5 bg-gray-50 border-t border-gray-100 flex justify-end">
