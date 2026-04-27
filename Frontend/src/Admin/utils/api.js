@@ -1,0 +1,20 @@
+const BASE_URL = "http://localhost:5000";
+
+export const apiFetch = async (endpoint, options = {}) => {
+    const token = localStorage.getItem("token");
+
+    const headers = {
+        "Content-Type": "application/json",
+        ...(token && {
+            Authorization: `Bearer ${token}`,
+        }),
+        ...(options.headers || {}),
+    };
+
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
+    });
+
+    return response;
+};
