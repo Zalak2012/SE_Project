@@ -455,6 +455,7 @@ exports.forgotPassword = async (req, res) => {
 
     // Create reset URL using environment variable
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    console.log("DEBUG: Generating reset link with FRONTEND_URL:", frontendUrl);
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     const message = `You are receiving this email because you (or someone else) have requested the reset of a password. Please make a POST request to: \n\n ${resetUrl}`;
