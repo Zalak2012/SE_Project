@@ -147,15 +147,11 @@ exports.signupUser = async (req, res) => {
       );
     }
 
-    // ✅ Doctor flow (no login yet)
-    if (finalRole === "doctor") {
-      return res.status(201).json({
-        message: "Doctor registration submitted. Waiting for admin approval.",
-      });
-    }
-
+    // ✅ Both doctor and patient go through email verification
     res.status(201).json({
-      message: "Registration successful. Please check your email for the verification code.",
+      message: finalRole === "doctor"
+        ? "Please verify your email. After verification, your account will await admin approval."
+        : "Registration successful. Please check your email for the verification code.",
       email: savedUser.email,
       requiresVerification: true
     });
@@ -191,6 +187,22 @@ exports.verifyEmail = async (req, res) => {
     user.verificationToken = undefined;
     user.verificationTokenExpires = undefined;
     await user.save();
+
+    // Doctor flow: email verified but still needs admin approval
+    if (user.role === "doctor" && !user.isApproved) {
+      return res.status(200).json({
+        message: "Email verified successfully! Your account is now pending admin approval. You will be notified once approved.",
+        doctorPendingApproval: true,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: user.status,
+          isApproved: user.isApproved
+        }
+      });
+    }
 
     const token = generateToken(user);
 
@@ -276,6 +288,41 @@ exports.loginUser = async (req, res) => {
     }
 
     console.log("LOGIN USER:", user);
+
+    // ✅ Email verification check
+    if (!user.isEmailVerified) {
+      // Generate new OTP and send it
+      const verificationOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      user.verificationToken = verificationOTP;
+      user.verificationTokenExpires = Date.now() + 10 * 60 * 1000;
+      await user.save();
+
+      try {
+        await sendEmail({
+          email: user.email,
+          subject: "Verify your CareMatePlus Account",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 10px; padding: 20px;">
+              <h2 style="color: #01579B; text-align: center;">Email Verification Required</h2>
+              <p>Hello <strong>${user.name}</strong>,</p>
+              <p>Your email is not yet verified. Please use the code below to verify your account:</p>
+              <div style="background-color: #f0fdfc; border: 2px dashed #028090; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #028090;">${verificationOTP}</span>
+              </div>
+              <p>This code will expire in 10 minutes.</p>
+            </div>
+          `
+        });
+      } catch (emailErr) {
+        console.error("❌ Verification email send failed:", emailErr.message);
+      }
+
+      return res.status(403).json({
+        message: "Please verify your email first. A new verification code has been sent.",
+        requiresVerification: true,
+        email: user.email
+      });
+    }
 
     // ✅ Doctor approval check
 
@@ -384,5 +431,96 @@ exports.getApprovedDoctors = async (req, res) => {
   } catch (error) {
     console.error("❌ Get doctors error:", error);
     res.status(500).json({ message: "Error fetching doctors" });
+  }
+};
+
+// ================= FORGOT PASSWORD =================
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "No user found with this email" });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+
+    // Set reset token and expiry (1 hour)
+    user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    user.resetPasswordExpires = Date.now() + 3600000;
+
+    await user.save();
+
+    // Create reset URL
+    // In production, this should be your frontend URL
+    const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
+
+    const message = `You are receiving this email because you (or someone else) have requested the reset of a password. Please make a POST request to: \n\n ${resetUrl}`;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Password Reset Request - CareMatePlus",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 10px; padding: 20px;">
+            <h2 style="color: #01579B; text-align: center;">Password Reset Request</h2>
+            <p>Hello <strong>${user.name}</strong>,</p>
+            <p>You requested to reset your password. Please click the button below to set a new password:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" style="background-color: #028090; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Reset Password</a>
+            </div>
+            <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+            <p>This link will expire in 1 hour.</p>
+            <p style="color: #777; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px;">CareMatePlus Team</p>
+          </div>
+        `
+      });
+
+      res.status(200).json({ message: "Email sent successfully" });
+    } catch (err) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+      console.error("Email send error:", err);
+      return res.status(500).json({ message: "Email could not be sent" });
+    }
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// ================= RESET PASSWORD =================
+exports.resetPassword = async (req, res) => {
+  try {
+    const resetPasswordToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    }).select("+password");
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
+
+    // Set new password
+    const { password } = req.body;
+    if (!password || !isValidPassword(password)) {
+      return res.status(400).json({ message: "Please provide a valid password (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char)" });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful. You can now login." });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: "Server Error" });
   }
 };

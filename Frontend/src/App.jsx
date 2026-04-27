@@ -5,6 +5,8 @@ import { DataProvider } from './context/DataContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import VerifyEmail from './pages/VerifyEmail';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import HomePage from './pages/HomePage';
 import FindDoctors from './pages/FindDoctors';
 import DoctorProfile from './pages/DoctorProfile';
@@ -57,6 +59,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/doctors" element={<FindDoctors />} />
             <Route path="/doctors/:id" element={<DoctorProfile />} />
             <Route path="/booking/:id" element={<BookingPage />} />

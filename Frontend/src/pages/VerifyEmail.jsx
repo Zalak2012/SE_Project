@@ -71,7 +71,14 @@ const VerifyEmail = () => {
                 throw new Error(data.message || "Verification failed");
             }
 
-            // Success! Log the user in
+            // Doctor: email verified but needs admin approval
+            if (data.doctorPendingApproval) {
+                alert("Email verified successfully! ✅\nYour account is pending admin approval. You'll be notified once approved.");
+                navigate("/login");
+                return;
+            }
+
+            // Patient/Other: Log the user in
             login(data, data.token);
             alert("Email verified successfully! ✅");
             

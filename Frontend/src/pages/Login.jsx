@@ -47,6 +47,16 @@ const Login = () => {
             const data = await response.json();
 
             if (!response.ok) {
+                // Redirect to verify-email if email is unverified
+                if (data.requiresVerification && data.email) {
+                    navigate("/verify-email", { 
+                        state: { 
+                            email: data.email,
+                            message: data.message 
+                        } 
+                    });
+                    return;
+                }
                 throw new Error(data.message || "Login failed");
             }
 
@@ -164,12 +174,13 @@ const Login = () => {
 
                     {/* Forgot Password */}
                     <div className="text-right">
-                        <span
-                            className="text-sm cursor-pointer"
+                        <Link
+                            to="/forgot-password"
+                            className="text-sm cursor-pointer hover:underline"
                             style={{ color: "#028090" }}
                         >
                             Forgot Password?
-                        </span>
+                        </Link>
                     </div>
 
                     {/* Error state */}

@@ -11,6 +11,8 @@ router.post("/register", signupUser); // Alias
 router.post("/login", loginUser);
 router.post("/verify-email", require("../controllers/userController").verifyEmail);
 router.post("/resend-otp", require("../controllers/userController").resendOTP);
+router.post("/forgot-password", require("../controllers/userController").forgotPassword);
+router.post("/reset-password/:token", require("../controllers/userController").resetPassword);
 
 // Use a combined profile update or doctor-specific if needed
 // For now, let's use the requested doctor update for /api/doctors/profile

@@ -58,7 +58,9 @@ const userSchema = new mongoose.Schema({
   availability: { type: String, default: "Mon-Fri, 9 AM – 5 PM" },
   city: { type: String, default: "Ahmedabad" },
   state: { type: String, default: "Gujarat" },
-  image: { type: String, default: "" }
+  image: { type: String, default: "" },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date
 }, { timestamps: true });
 
 

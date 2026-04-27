@@ -1,32 +1,50 @@
 # Stage 1: Build Frontend
-FROM node:18-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
+# Copy only package files first for better caching
 COPY Frontend/package*.json ./
-RUN npm install
+RUN npm ci
+# Copy source and build
 COPY Frontend/ ./
-# Build frontend (output goes to /app/frontend/dist)
 RUN npm run build
 
-# Stage 2: Final Image (Backend + Serving Frontend)
-FROM node:18-alpine
+# Stage 2: Build Backend
+FROM node:20-alpine AS backend-builder
 WORKDIR /app/backend
-
-# Copy backend package files and install dependencies
+# Install build dependencies for native modules (like bcrypt)
+RUN apk add --no-cache python3 make g++
+# Copy only package files first
 COPY Backend/package*.json ./
-RUN npm install --production
-
-# Copy backend source code
+RUN npm ci --omit=dev
+# Copy backend source
 COPY Backend/ ./
 
-# Copy built frontend from Stage 1
-COPY --from=frontend-builder /app/frontend/dist /app/Frontend/dist
+# Stage 3: Final Production Image
+FROM node:20-alpine
+WORKDIR /app/backend
 
-# Set production environment
+# Create uploads directory with correct permissions for the non-root user
+RUN mkdir -p uploads && chown -R node:node /app
+
+# Copy production dependencies and source from backend-builder
+COPY --from=backend-builder --chown=node:node /app/backend ./
+
+# Copy built frontend assets to the expected path (../Frontend/dist relative to /app/backend)
+COPY --from=frontend-builder --chown=node:node /app/frontend/dist /app/Frontend/dist
+
+# Set environment variables
 ENV NODE_ENV=production
 ENV PORT=10000
 
-# Expose the port Render expects (default is 10000 or use $PORT)
+# Expose production port
 EXPOSE 10000
 
-# Start the server
+# Use non-root user for security
+USER node
+
+# Health check to ensure the server is responding
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:10000/api/health || exit 1
+
+# Launch the application
 CMD ["node", "server.js"]

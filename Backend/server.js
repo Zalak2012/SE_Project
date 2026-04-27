@@ -83,10 +83,12 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static(frontendPath));
 
   app.get("*path", (req, res) => {
-    // Only handle non-API routes
-    if (!req.url.startsWith("/api")) {
-      res.sendFile(path.join(frontendPath, "index.html"));
+    // If it's an API route that reached here, it means it didn't match any existing API routes
+    if (req.url.startsWith("/api")) {
+      return res.status(404).json({ message: "API route not found" });
     }
+    // Otherwise, serve the frontend SPA
+    res.sendFile(path.join(frontendPath, "index.html"));
   });
 }
 
