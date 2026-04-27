@@ -60,6 +60,12 @@ const Signup = () => {
                 throw new Error(data.message || "Signup failed");
             }
 
+            // Handle Email Verification Flow
+            if (data.requiresVerification) {
+                navigate("/verify-email", { state: { email: formData.email } });
+                return;
+            }
+
             // Handle Doctor flow (waiting for approval)
             if (role === "doctor" && data.message) {
                 alert(data.message);

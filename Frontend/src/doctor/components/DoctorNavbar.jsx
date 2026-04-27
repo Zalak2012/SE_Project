@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Menu, Bell, Calendar, Users, Clock, MessageSquare, Star, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, Bell, Calendar, Users, Clock, MessageSquare, Star, X, FileText } from 'lucide-react';
 import { useLocation, Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
+import { apiFetch } from '../../utils/api';
 
 const DoctorNavbar = ({ sidebarOpen, setSidebarOpen }) => {
     const location = useLocation();
@@ -10,16 +11,53 @@ const DoctorNavbar = ({ sidebarOpen, setSidebarOpen }) => {
     const { currentUser } = useAuth();
     const { addReview } = useData();
     const [feedbackModal, setFeedbackModal] = useState({ show: false, rating: 5, text: '' });
+    const [notifications, setNotifications] = useState([]);
+    const [showNotifications, setShowNotifications] = useState(false);
     const userInitials = currentUser?.name ? currentUser.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase() : "DR";
+
+    useEffect(() => {
+        if (!currentUser) return;
+        const fetchNotifications = async () => {
+            try {
+                const res = await apiFetch("/api/notifications");
+                if (res.ok) {
+                    setNotifications(await res.json());
+                }
+            } catch (err) {
+                console.error("Notifications fetch error:", err);
+            }
+        };
+        fetchNotifications();
+        
+        // Optional: Polling every 30 seconds
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
+    }, [currentUser]);
+
+    const handleNotificationsClick = async () => {
+        setShowNotifications(!showNotifications);
+        
+        // Mark as read if opening
+        if (!showNotifications && notifications.some(n => !n.isRead)) {
+            try {
+                await apiFetch("/api/notifications/mark-read", { method: "POST" });
+                setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            } catch (e) {
+                console.error("Mark read error", e);
+            }
+        }
+    };
 
     const submitPlatformFeedback = () => {
         if (!feedbackModal.text.trim()) return;
         addReview({
-            userName: currentUser?.name || "Dr. Sarah Jenkins",
+            userName: currentUser?.name || "Doctor User",
             userType: "Doctor",
             text: `[Platform Feedback] ${feedbackModal.text}`,
             rating: feedbackModal.rating,
-            status: "Pending" // Sent to admin reviews
+            status: "Pending",
+            avatar: currentUser?.avatar,
+            doctorId: currentUser?.userId || currentUser?._id
         });
         setFeedbackModal({ show: false, rating: 5, text: '' });
     };
@@ -41,7 +79,7 @@ const DoctorNavbar = ({ sidebarOpen, setSidebarOpen }) => {
                         C
                     </div>
                     <span className="text-xl font-bold tracking-tight text-white hidden sm:block">
-                        Care<span className="text-[#00FFD1]">Mate</span><span className="text-[#B3E5FC]">+</span>
+                        Care<span className="text-[#00FFD1]">Mate</span><span className="text-[#B3E5FC]">Plus</span>
                     </span>
                 </Link>
             </div>
@@ -59,6 +97,12 @@ const DoctorNavbar = ({ sidebarOpen, setSidebarOpen }) => {
                     className={({isActive}) => `flex items-center gap-2 text-sm font-semibold transition-all ${isActive ? 'text-white drop-shadow-md' : 'text-white/70 hover:text-white'}`}
                 >
                     <Users className="w-4 h-4" /> Patients
+                </NavLink>
+                <NavLink 
+                    to="/doctor/records" 
+                    className={({isActive}) => `flex items-center gap-2 text-sm font-semibold transition-all ${isActive ? 'text-white drop-shadow-md' : 'text-white/70 hover:text-white'}`}
+                >
+                    <FileText className="w-4 h-4" /> Records
                 </NavLink>
                 <NavLink 
                     to="/doctor/schedule" 
@@ -92,10 +136,44 @@ const DoctorNavbar = ({ sidebarOpen, setSidebarOpen }) => {
                     <MessageSquare className="w-5 h-5" />
                 </button>
 
-                <button className="relative p-2 text-white/80 hover:bg-white/10 rounded-full transition-colors">
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-400 rounded-full border-2 border-[#01579B]" />
-                </button>
+                <div className="relative">
+                    <button 
+                        onClick={handleNotificationsClick}
+                        className="relative p-2 text-white/80 hover:bg-white/10 rounded-full transition-colors focus:outline-none"
+                    >
+                        <Bell className="w-5 h-5" />
+                        {notifications.filter(n => !n.isRead).length > 0 && (
+                            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-400 rounded-full border-2 border-[#01579B]" />
+                        )}
+                    </button>
+                    
+                    {/* Notifications Dropdown */}
+                    {showNotifications && (
+                        <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 transform transition-all duration-200 z-50 overflow-hidden">
+                            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                                <h3 className="font-bold text-gray-800">Notifications</h3>
+                                <span className="text-xs font-semibold bg-[#E1F5FE] text-[#01579B] px-2 py-1 rounded-lg">
+                                    {notifications.length}
+                                </span>
+                            </div>
+                            <div className="max-h-80 overflow-y-auto">
+                                {notifications.length > 0 ? (
+                                    notifications.map(n => (
+                                        <div key={n._id} className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors ${!n.isRead ? 'bg-blue-50/30' : ''}`}>
+                                            <p className="text-sm font-bold text-gray-800">{n.title}</p>
+                                            <p className="text-xs text-gray-500 mt-1">{n.message}</p>
+                                            <p className="text-[10px] text-gray-400 mt-2 font-semibold uppercase tracking-wider">{new Date(n.createdAt).toLocaleString()}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-6 text-center text-gray-500 text-sm font-medium">
+                                        No notifications yet
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
 
                 <div className="h-8 w-8 rounded-full bg-white text-[#01579B] flex items-center justify-center font-bold text-sm shadow-sm uppercase shrink-0">
                     {userInitials}

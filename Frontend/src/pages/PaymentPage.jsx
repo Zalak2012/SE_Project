@@ -92,6 +92,7 @@ const PaymentPage = () => {
                     doctorId: doctor._id,
                     appointmentDate: date,
                     appointmentTime: time,
+                    amount: doctor.consultationFee,
                     paymentMethod: finalMethod,
                     consultationType: "General Consultation",
                     notes: "Booked via platform"

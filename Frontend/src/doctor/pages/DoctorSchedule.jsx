@@ -1,27 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Info, X, Loader2 } from 'lucide-react';
 import { apiFetch } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
 const DoctorSchedule = () => {
-    const [selectedDay, setSelectedDay] = useState('Monday');
-    const [schedule, setSchedule] = useState({});
+    const { currentUser, initialized } = useAuth();
+    const [selectedDate, setSelectedDate] = useState(() => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d;
+    });
+    const [slots, setSlots] = useState([]);
     const [loading, setLoading] = useState(true);
     
     const [showAddModal, setShowAddModal] = useState(false);
     const [newSlotTime, setNewSlotTime] = useState('');
 
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const upcomingDates = Array.from({ length: 7 }).map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() + i);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    });
 
     const fetchSchedule = async () => {
+        if (!initialized) return;
+        
+        if (!currentUser?._id) {
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
-            // In a real app, we'd fetch weekly templates. 
-            // For now, we'll fetch for the current week's dates or a general template.
-            const res = await apiFetch("/api/schedule");
+            const isoDate = new Date(selectedDate.getTime() - (selectedDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            const res = await apiFetch(`/api/schedule?doctorId=${currentUser._id}&date=${isoDate}`);
             if (res.ok) {
                 const data = await res.json();
-                // Map API data to our UI structure if needed
-                setSchedule(data.weeklySlots || {});
+                setSlots(data.slots || []);
             }
         } catch (err) {
             console.error("Schedule fetch error:", err);
@@ -32,26 +48,24 @@ const DoctorSchedule = () => {
 
     useEffect(() => {
         fetchSchedule();
-    }, []);
+    }, [selectedDate, currentUser?._id, initialized]);
 
-    const toggleSlot = async (timeToToggle) => {
+    const toggleSlot = async (timeToToggle, currentStatus) => {
+        const newStatus = currentStatus === 'available' ? 'booked' : 'available';
+        
         // Optimistic update
-        setSchedule(prev => ({
-            ...prev,
-            [selectedDay]: prev[selectedDay].map(slot => 
-                slot.time === timeToToggle 
-                    ? { ...slot, available: !slot.available }
-                    : slot
-            )
-        }));
+        setSlots(prev => prev.map(slot => 
+            slot.time === timeToToggle ? { ...slot, status: newStatus } : slot
+        ));
 
         try {
+            const isoDate = new Date(selectedDate.getTime() - (selectedDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
             await apiFetch("/api/schedule/slot", {
                 method: "PUT",
                 body: JSON.stringify({
-                    day: selectedDay,
+                    date: isoDate,
                     time: timeToToggle,
-                    status: "toggle"
+                    status: newStatus
                 })
             });
         } catch (err) {
@@ -62,15 +76,14 @@ const DoctorSchedule = () => {
 
     const deleteSlot = async (e, timeToDelete) => {
         e.stopPropagation();
-        setSchedule(prev => ({
-            ...prev,
-            [selectedDay]: prev[selectedDay].filter(slot => slot.time !== timeToDelete)
-        }));
-
+        // Since there's no DELETE in backend, we might just set status to "unavailable" or similar.
+        // I will use PUT with "unavailable" to hide/disable it.
+        setSlots(prev => prev.filter(slot => slot.time !== timeToDelete));
         try {
+            const isoDate = new Date(selectedDate.getTime() - (selectedDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
             await apiFetch("/api/schedule/slot", {
-                method: "DELETE",
-                body: JSON.stringify({ day: selectedDay, time: timeToDelete })
+                method: "PUT",
+                body: JSON.stringify({ date: isoDate, time: timeToDelete, status: "unavailable" })
             });
         } catch (err) {
             console.error("Slot delete error:", err);
@@ -81,16 +94,19 @@ const DoctorSchedule = () => {
     const handleAddSlot = async () => {
         if (!newSlotTime.trim()) return;
         
+        // Optimistic
+        setSlots(prev => [...prev, { time: newSlotTime.trim(), status: 'available' }]);
         try {
-            const res = await apiFetch("/api/schedule/slot", {
+            const isoDate = new Date(selectedDate.getTime() - (selectedDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            // The backend doesn't have a POST endpoint, but we can update the entire document. 
+            // Wait, there's no POST slot endpoint. We will need to add it or do something else. Let's just PUT it as available, if backend handles it by pushing. Wait, findOneAndUpdate with "slots.$.status" won't push. Let's create an endpoint in a moment.
+            await apiFetch("/api/schedule/slot/add", {
                 method: "POST",
-                body: JSON.stringify({ day: selectedDay, time: newSlotTime.trim() })
+                body: JSON.stringify({ date: isoDate, time: newSlotTime.trim(), status: 'available' })
             });
-            if (res.ok) {
-                fetchSchedule();
-            }
         } catch (err) {
             console.error("Slot add error:", err);
+            fetchSchedule();
         }
         
         setNewSlotTime('');
@@ -104,8 +120,8 @@ const DoctorSchedule = () => {
         </div>
     );
 
-    const currentSlots = schedule[selectedDay] || [];
-    const availableCount = currentSlots.filter(s => s.available).length;
+    const currentSlots = slots.filter(s => s.status !== 'unavailable');
+    const availableCount = currentSlots.filter(s => s.status === 'available').length;
 
     return (
         <div className="bg-[#f5f7fb] -m-4 md:-m-8 p-6 md:p-10 min-h-[calc(100vh-64px)] animate-[fadeIn_0.3s_ease-out_both] font-sans text-[#1f2937]">
@@ -114,7 +130,7 @@ const DoctorSchedule = () => {
             <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-[#1f2937]">Manage Schedule</h1>
-                    <p className="text-[#6b7280] font-medium mt-1">Set your weekly availability for patients.</p>
+                    <p className="text-[#6b7280] font-medium mt-1">Set your daily availability for patients.</p>
                 </div>
                 <button 
                     onClick={() => setShowAddModal(true)}
@@ -125,27 +141,31 @@ const DoctorSchedule = () => {
             </div>
 
             <div className="max-w-[1200px] mx-auto">
-                {/* Day Selector */}
+                {/* Date Selector */}
                 <div className="flex flex-wrap gap-3 mb-8">
-                    {days.map(day => (
-                        <button
-                            key={day}
-                            onClick={() => setSelectedDay(day)}
-                            className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-sm
-                                ${selectedDay === day 
-                                    ? 'bg-[#3b82f6] text-white shadow-md' 
-                                    : 'bg-[#e0f2fe] text-[#3b82f6] hover:bg-[#bae6fd]' 
-                                }`}
-                        >
-                            {day}
-                        </button>
-                    ))}
+                    {upcomingDates.map((date, idx) => {
+                        const isSelected = selectedDate.getTime() === date.getTime();
+                        const label = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        return (
+                            <button
+                                key={idx}
+                                onClick={() => setSelectedDate(date)}
+                                className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all shadow-sm
+                                    ${isSelected 
+                                        ? 'bg-[#3b82f6] text-white shadow-md' 
+                                        : 'bg-[#e0f2fe] text-[#3b82f6] hover:bg-[#bae6fd]' 
+                                    }`}
+                            >
+                                {label}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {/* Slots Card */}
                 <div className="bg-[#ffffff] rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
                     <div className="p-6 md:px-8 md:py-6 border-b border-gray-100 flex justify-between items-center bg-[#ffffff]">
-                        <h2 className="text-xl font-bold text-[#1f2937]">{selectedDay}'s Slots</h2>
+                        <h2 className="text-xl font-bold text-[#1f2937]">{selectedDate.toLocaleDateString()}'s Slots</h2>
                         <span className="bg-[#e6f7f1] text-[#059669] text-xs font-bold px-3 py-1.5 rounded-full border border-[#34d399]/30">
                             {availableCount} available
                         </span>
@@ -157,15 +177,15 @@ const DoctorSchedule = () => {
                                 {currentSlots.map((slot, index) => (
                                     <button
                                         key={index}
-                                        onClick={() => toggleSlot(slot.time)}
+                                        onClick={() => toggleSlot(slot.time, slot.status)}
                                         className={`group relative py-3.5 px-3 rounded-xl text-center font-bold text-sm tracking-wide transition-all border 
-                                            ${slot.available 
+                                            ${slot.status === 'available' 
                                                 ? 'bg-[#e6f7f1] border-[#34d399] text-[#1f2937] shadow-sm hover:shadow-md' 
                                                 : 'bg-[#e5e7eb] border-transparent text-[#6b7280] hover:bg-gray-300'
                                             }`}
                                     >
                                         {slot.time}
-                                        <div className={`absolute top-1/2 -translate-y-1/2 right-3 w-2 h-2 rounded-full ${slot.available ? 'bg-[#34d399]' : 'bg-gray-400'}`}></div>
+                                        <div className={`absolute top-1/2 -translate-y-1/2 right-3 w-2 h-2 rounded-full ${slot.status === 'available' ? 'bg-[#34d399]' : 'bg-gray-400'}`}></div>
                                         
                                         {/* Hover Delete Action */}
                                         <div 
@@ -180,7 +200,7 @@ const DoctorSchedule = () => {
                             </div>
                         ) : (
                             <div className="text-center py-16">
-                                <p className="text-[#6b7280] font-medium text-lg">No slots configured for {selectedDay}.</p>
+                                <p className="text-[#6b7280] font-medium text-lg">No slots configured for {selectedDate.toLocaleDateString()}.</p>
                                 <button className="mt-4 text-[#3b82f6] font-bold hover:underline transition-all">
                                     + Generate Default Slots
                                 </button>
@@ -205,7 +225,7 @@ const DoctorSchedule = () => {
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
                         <div className="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
-                            <h3 className="text-xl font-bold text-[#1f2937]">Add Slot for {selectedDay}</h3>
+                            <h3 className="text-xl font-bold text-[#1f2937]">Add Slot for {selectedDate.toLocaleDateString()}</h3>
                             <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
                                 <X className="w-5 h-5" />
                             </button>

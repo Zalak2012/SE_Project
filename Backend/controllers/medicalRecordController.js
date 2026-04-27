@@ -37,3 +37,24 @@ exports.getRecordsByPatient = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch records" });
     }
 };
+
+exports.getRecords = async (req, res) => {
+    try {
+        let query = {};
+        if (req.user.role === "doctor") {
+            query.doctorId = req.user.userId;
+        } else if (req.user.role === "patient") {
+            query.patientId = req.user.userId;
+        }
+
+        const records = await MedicalRecord.find(query)
+            .populate("patientId", "name email")
+            .populate("doctorId", "name specialty")
+            .sort({ createdAt: -1 });
+            
+        res.status(200).json(records);
+    } catch (error) {
+        console.error("Fetch records error:", error);
+        res.status(500).json({ message: "Failed to fetch records" });
+    }
+};

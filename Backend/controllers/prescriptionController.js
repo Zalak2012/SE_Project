@@ -35,3 +35,24 @@ exports.getPrescriptionsByPatient = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch prescriptions" });
     }
 };
+
+exports.getPrescriptions = async (req, res) => {
+    try {
+        let query = {};
+        if (req.user.role === "doctor") {
+            query.doctorId = req.user.userId;
+        } else if (req.user.role === "patient") {
+            query.patientId = req.user.userId;
+        }
+
+        const prescriptions = await Prescription.find(query)
+            .populate("patientId", "name email")
+            .populate("doctorId", "name specialty")
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(prescriptions);
+    } catch (error) {
+        console.error("Fetch prescriptions error:", error);
+        res.status(500).json({ message: "Failed to fetch prescriptions" });
+    }
+};
