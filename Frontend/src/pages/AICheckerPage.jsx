@@ -11,50 +11,85 @@ import { apiFetch } from '../utils/api';
 // ─────────────────────────────────────────────────────────────────────────────
 const SYMPTOM_MAP = [
     {
-        keywords: ['fever', 'temperature', 'chills', 'sweating', 'cold', 'flu', 'fatigue', 'weakness', 'body ache', 'faint', 'dizzy', 'dizziness', 'tired'],
-        specialties: ['General Physician'],
-        response: "Based on your symptoms, you seem to be experiencing signs of a general illness like fever or flu. I strongly recommend visiting a **General Physician** for proper evaluation. Please do not self-medicate.",
+        keywords: ['pregnancy', 'pregnant', 'delayed periods', 'cramps', 'period', 'menstruation', 'gynecology'],
+        specialties: ['Gynecologist'],
+        response: "Your symptoms indicate a need for gynecological care. I strongly recommend visiting a **Gynecologist** for proper evaluation and guidance.",
     },
     {
-        keywords: ['headache', 'migraine', 'head pain', 'head ache', 'brain', 'memory', 'numbness', 'seizure', 'epilepsy', 'nerve', 'neurological', 'confusion'],
-        specialties: ['Neurologist'],
-        response: "Your symptoms may indicate a neurological concern such as migraines or nerve-related issues. I recommend consulting a **Neurologist** for a thorough evaluation. Early diagnosis is key.",
-    },
-    {
-        keywords: ['chest pain', 'heart', 'palpitation', 'shortness of breath', 'breathlessness', 'chest tightness', 'cardiac', 'pulse', 'irregular heartbeat', 'heart attack'],
-        specialties: ['Cardiologist'],
-        response: "⚠️ Your symptoms may indicate a cardiac concern. Chest pain and related symptoms should be taken seriously. Please consult a **Cardiologist** immediately. If symptoms are severe, visit an emergency room.",
-    },
-    {
-        keywords: ['cough', 'breathing', 'asthma', 'lung', 'respiratory', 'wheezing', 'phlegm', 'mucus', 'bronchitis', 'pneumonia', 'inhaler', 'oxygen'],
-        specialties: ['Pulmonologist'],
-        response: "Your symptoms suggest a possible respiratory or lung condition. A **Pulmonologist** can help diagnose and treat conditions like asthma, bronchitis, or other breathing disorders.",
-    },
-    {
-        keywords: ['skin', 'rash', 'acne', 'itch', 'allergy', 'eczema', 'psoriasis', 'dermatitis', 'hives', 'blister', 'pimple', 'pigmentation', 'hair loss', 'nail'],
+        keywords: ['skin rash', 'acne', 'itching', 'itch', 'allergy symptoms', 'hair fall', 'skin allergy', 'eczema', 'pimples', 'skin', 'rash', 'allergy', 'hives', 'blister', 'pigmentation', 'nail'],
         specialties: ['Dermatologist'],
-        response: "Your symptoms point to a skin-related condition. A **Dermatologist** is the right specialist to diagnose and treat concerns like rashes, acne, eczema, or other skin disorders.",
+        response: "Your symptoms point to a skin or hair-related condition. A **Dermatologist** is the right specialist to diagnose and treat these concerns.",
     },
     {
-        keywords: ['stomach', 'abdomen', 'nausea', 'vomiting', 'diarrhea', 'constipation', 'bloating', 'gas', 'acid', 'heartburn', 'indigestion', 'bowel', 'gastric', 'ulcer', 'stomach pain', 'abdominal'],
-        specialties: ['Gastroenterologist'],
-        response: "Your digestive complaints might require specialist attention. A **Gastroenterologist** specializes in stomach, intestinal, and digestive disorders and can provide accurate diagnosis and treatment.",
+        keywords: ['headache', 'dizziness', 'nerve pain', 'migraine', 'seizure', 'numbness', 'head pain', 'head ache', 'brain', 'memory', 'epilepsy', 'nerve', 'neurological', 'confusion'],
+        specialties: ['Neurologist'],
+        response: "Your symptoms may indicate a neurological concern such as migraines or nerve-related issues. I recommend consulting a **Neurologist** for a thorough evaluation.",
     },
     {
-        keywords: ['child', 'baby', 'infant', 'toddler', 'kid', 'pediatric', 'growth', 'vaccination', 'immunization', 'newborn', 'children'],
-        specialties: ['Pediatrician'],
-        response: "For concerns related to children's health, growth, or development, a **Pediatrician** is the ideal specialist. They're trained to handle all aspects of child healthcare.",
+        keywords: ['chest pain', 'heart discomfort', 'blood pressure symptoms', 'palpitation', 'shortness of breath', 'heart', 'cardiac', 'pulse', 'irregular heartbeat', 'heart attack', 'blood pressure'],
+        specialties: ['Cardiologist'],
+        response: "⚠️ Your symptoms may indicate a cardiac concern. Please consult a **Cardiologist** immediately. If symptoms are severe, visit an emergency room.",
     },
     {
-        keywords: ['joint', 'bone', 'fracture', 'muscle', 'back pain', 'knee', 'shoulder', 'neck pain', 'arthritis', 'spine', 'ortho', 'ligament', 'tendon', 'swelling'],
-        specialties: ['Orthopedic Surgeon'],
-        response: "Your symptoms indicate a possible musculoskeletal issue. An **Orthopedic Surgeon** specializes in bones, joints, muscles, and related injuries. I recommend scheduling a consultation.",
-    },
-    {
-        keywords: ['ear', 'nose', 'throat', 'ent', 'sinus', 'hearing', 'tonsil', 'cold', 'nasal', 'snoring', 'voice', 'hoarse', 'loss of smell', 'taste'],
+        keywords: ['ear pain', 'sinus issues', 'throat pain', 'sore throat', 'sinus pain', 'ent', 'ear', 'nose', 'throat', 'sinus', 'hearing', 'tonsil', 'nasal', 'snoring', 'voice', 'hoarse', 'loss of smell', 'taste'],
         specialties: ['ENT Specialist'],
-        response: "Your symptoms suggest an ear, nose, or throat concern. An **ENT Specialist** can accurately diagnose and treat sinusitis, hearing loss, tonsillitis, and related conditions.",
+        response: "Your symptoms suggest an ear, nose, or throat concern. An **ENT Specialist** can accurately diagnose and treat conditions like sinus issues or throat pain.",
     },
+    {
+        keywords: ['joint pain', 'muscle pain', 'fracture', 'muscle ache', 'back pain', 'bone', 'arthritis', 'joint', 'knee', 'shoulder', 'neck pain', 'spine', 'ortho', 'ligament', 'tendon', 'swelling'],
+        specialties: ['Orthopedist', 'Orthopedic Surgeon'],
+        response: "Your symptoms indicate a possible musculoskeletal issue. An **Orthopedist** specializes in bones, joints, muscles, and related injuries.",
+    },
+    {
+        keywords: ['fever', 'weakness', 'cold', 'fatigue', 'flu', 'body ache', 'temperature', 'chills', 'sweating', 'faint', 'dizzy', 'tired'],
+        specialties: ['General Physician'],
+        response: "Based on your symptoms, you seem to be experiencing signs of a general illness like fever or flu. I strongly recommend visiting a **General Physician** for proper evaluation.",
+    },
+    {
+        keywords: ['blood disorder symptoms', 'anemia', 'bleeding', 'blood'],
+        specialties: ['Hematologist'],
+        response: "Your symptoms suggest a possible blood-related disorder. A **Hematologist** specializes in diagnosing and treating conditions related to the blood.",
+    },
+    {
+        keywords: ['fertility issues', 'infertility', 'conceive'],
+        specialties: ['Infertility Specialist'],
+        response: "For concerns related to fertility, an **Infertility Specialist** is the ideal doctor to provide specialized guidance and treatment.",
+    },
+    {
+        keywords: ['anxiety', 'stress', 'depression', 'mental', 'panic'],
+        specialties: ['Psychiatrist'],
+        response: "Your symptoms suggest a mental health or emotional concern. A **Psychiatrist** can provide the necessary evaluation, support, and treatment.",
+    },
+    {
+        keywords: ['vision problems', 'eye pain', 'blurred vision', 'eyes', 'vision'],
+        specialties: ['Ophthalmologist'],
+        response: "Your symptoms point to an eye-related issue. An **Ophthalmologist** is the right specialist to evaluate your vision and eye health.",
+    },
+    {
+        keywords: ['urinary pain', 'urine', 'kidney', 'bladder'],
+        specialties: ['Urologist'],
+        response: "Your symptoms suggest a urinary or kidney-related concern. A **Urologist** specializes in the urinary tract system and can help diagnose the issue.",
+    },
+    {
+        keywords: ['diabetes symptoms', 'sugar', 'thyroid', 'hormonal', 'diabetes'],
+        specialties: ['Endocrinologist'],
+        response: "Your symptoms may relate to a hormonal or metabolic condition like diabetes. I recommend consulting an **Endocrinologist** for proper care.",
+    },
+    {
+        keywords: ['stomach pain', 'vomiting', 'vomit', 'puke', 'nausea', 'diarrhea', 'constipation', 'digestion', 'gastric', 'stomach', 'abdomen', 'bloating', 'gas', 'acid', 'heartburn', 'indigestion', 'bowel', 'ulcer', 'abdominal'],
+        specialties: ['Gastroenterologist'],
+        response: "Your digestive complaints might require specialist attention. A **Gastroenterologist** specializes in stomach, intestinal, and digestive disorders.",
+    },
+    {
+        keywords: ['breathing problem', 'asthma', 'lung', 'wheezing', 'cough', 'respiratory', 'phlegm', 'mucus', 'bronchitis', 'pneumonia', 'inhaler', 'oxygen', 'breathing feels heavy'],
+        specialties: ['Pulmonologist'],
+        response: "Your symptoms suggest a possible respiratory or lung condition. A **Pulmonologist** can help diagnose and treat breathing disorders.",
+    },
+    {
+        keywords: ['child', 'baby', 'infant', 'toddler', 'pediatric', 'kid', 'growth', 'vaccination', 'immunization', 'newborn', 'children'],
+        specialties: ['Pediatrician'],
+        response: "For concerns related to children's health, growth, or development, a **Pediatrician** is the ideal specialist.",
+    }
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -63,13 +98,30 @@ const SYMPTOM_MAP = [
 function getAIResponse(userInput, doctorsList) {
     const lower = userInput.toLowerCase();
 
+    let bestRule = null;
+    let maxScore = 0;
+
     for (const rule of SYMPTOM_MAP) {
-        if (rule.keywords.some((kw) => lower.includes(kw))) {
-            const suggestedDoctors = doctorsList.filter((doc) =>
-                rule.specialties.includes(doc.specialty) || rule.specialties.includes(doc.specialization)
-            );
-            return { type: 'symptom', text: rule.response, doctors: suggestedDoctors };
+        let score = 0;
+        for (const kw of rule.keywords) {
+            if (lower.includes(kw.toLowerCase())) {
+                score += kw.length; // Weigh longer phrase matches more heavily
+            }
         }
+        if (score > maxScore) {
+            maxScore = score;
+            bestRule = rule;
+        }
+    }
+
+    if (bestRule) {
+        const suggestedDoctors = doctorsList.filter((doc) =>
+            bestRule.specialties.some(s => 
+                (doc.specialty && doc.specialty.toLowerCase() === s.toLowerCase()) || 
+                (doc.specialization && doc.specialization.toLowerCase() === s.toLowerCase())
+            )
+        );
+        return { type: 'symptom', text: bestRule.response, doctors: suggestedDoctors };
     }
 
     return {
@@ -101,26 +153,41 @@ const DoctorCard = ({ doctor, navigate }) => (
             src={getImageUrl(doctor.image)}
             alt={doctor.name}
             onError={(e) => { e.target.src = "/default-doctor.png"; }}
-            className="w-12 h-12 rounded-xl object-cover border-2 border-white shadow-sm shrink-0"
+            className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-sm shrink-0"
         />
         <div className="flex-grow min-w-0">
             <p className="font-bold text-[#01579B] text-sm truncate group-hover:text-[#0277BD] transition-colors">{doctor.name}</p>
             <p className="text-[#028090] text-xs font-medium">{doctor.specialization || doctor.specialty}</p>
-            <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-yellow-400 text-xs">★</span>
-                <span className="text-xs font-bold text-gray-700">{doctor.rating}</span>
-                <span className="text-xs text-gray-400">({doctor.patientsCount || doctor.reviews || 0})</span>
+            <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-1">
+                    <span className="text-yellow-400 text-xs">★</span>
+                    <span className="text-xs font-bold text-gray-700">{doctor.rating || '5.0'}</span>
+                    <span className="text-xs text-gray-400">({doctor.patientsCount || doctor.reviews || 0})</span>
+                </div>
+                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                <span className="text-[10px] font-semibold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-md">{doctor.experience || 0} Yrs Exp</span>
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+                <p className="text-xs font-bold text-[#01579B]">₹{doctor.consultationFee || 500} <span className="font-normal text-gray-500">Fee</span></p>
                 {doctor.availableToday && (
-                    <span className="ml-1 bg-green-100 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">Today</span>
+                    <span className="bg-green-100 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">Today</span>
                 )}
             </div>
         </div>
-        <button
-            onClick={() => navigate(`/doctors/${doctor._id || doctor.id}`)}
-            className="shrink-0 text-xs font-bold px-3 py-2 rounded-lg bg-[#E1F5FE] text-[#0277BD] hover:bg-[#0277BD] hover:text-white transition-all duration-200 whitespace-nowrap"
-        >
-            View Profile
-        </button>
+        <div className="shrink-0 flex flex-col gap-1.5">
+            <button
+                onClick={() => navigate(`/doctors/${doctor._id || doctor.id}`)}
+                className="w-full text-[10px] font-bold px-3 py-1.5 rounded-lg bg-[#E1F5FE] text-[#0277BD] hover:bg-[#0277BD] hover:text-white transition-all duration-200 whitespace-nowrap"
+            >
+                View Profile
+            </button>
+            <button
+                onClick={() => navigate(`/booking/${doctor._id || doctor.id}`)}
+                className="w-full text-[10px] font-bold px-3 py-1.5 rounded-lg bg-[#028090] text-white hover:bg-[#026f7a] shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap"
+            >
+                Book
+            </button>
+        </div>
     </div>
 );
 
