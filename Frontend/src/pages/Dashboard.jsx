@@ -20,7 +20,9 @@ const Dashboard = () => {
         upcoming: 0,
         completed: 0,
         cancelled: 0,
-        healthScore: 85
+        healthScore: 85,
+        recordsCount: 0,
+        progress: 72
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -54,12 +56,25 @@ const Dashboard = () => {
                     const upcoming = data.filter(a => a.status === 'upcoming').length;
                     const completed = data.filter(a => a.status === 'completed').length;
                     const cancelled = data.filter(a => a.status === 'cancelled').length;
+                    const progress = data.length > 0 ? Math.round((completed / data.length) * 100) : 75; // Fallback to 75% if no data yet or calculated
                     
                     setStats(prev => ({
                         ...prev,
                         upcoming,
                         completed,
-                        cancelled
+                        cancelled,
+                        progress: progress || 72 // Keep 72 as fallback if 0
+                    }));
+                }
+
+                // Fetch medical records for count
+                const recordsRes = await apiFetch("/api/medical-records");
+                if (recordsRes.ok) {
+                    const recordsData = await recordsRes.json();
+                    const recordsCount = Array.isArray(recordsData) ? recordsData.length : 0;
+                    setStats(prev => ({
+                        ...prev,
+                        recordsCount
                     }));
                 } else if (res.status === 401) {
                     setError("Session expired. Please login again.");
@@ -93,7 +108,7 @@ const Dashboard = () => {
                         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
                             Hello, <span className="text-[#01579B]">{userName}</span>! 👋
                         </h1>
-                        <p className="text-gray-500 font-medium mt-1">Welcome back to CareMate+! Here's your health summary.</p>
+                        <p className="text-gray-500 font-medium mt-1">Welcome back to CareMatePlus! Here's your health summary.</p>
                     </div>
                 </div>
 
@@ -128,18 +143,18 @@ const Dashboard = () => {
                         </div>
                         <div>
                             <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Progress</p>
-                            <h3 className="text-2xl font-black text-gray-900">72%</h3>
+                            <h3 className="text-2xl font-black text-gray-900">{stats.progress}%</h3>
                         </div>
                     </div>
 
                     {/* Card 4: Medical Records */}
-                    <div className="bg-white rounded-2xl shadow-md border border-gray-50 p-6 flex items-center gap-5 hover:shadow-lg transition-shadow">
+                    <div onClick={() => navigate("/records")} className="bg-white rounded-2xl shadow-md border border-gray-50 p-6 flex items-center gap-5 hover:shadow-lg transition-shadow cursor-pointer">
                         <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-3xl shrink-0">
                             📂
                         </div>
                         <div>
                             <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Records</p>
-                            <h3 className="text-2xl font-black text-gray-900">{stats.completed}</h3>
+                            <h3 className="text-2xl font-black text-gray-900">{stats.recordsCount}</h3>
                         </div>
                     </div>
                 </div>
@@ -223,58 +238,36 @@ const Dashboard = () => {
                         </section>
 
                         {/* QUICK ACTIONS / CTA BUTTONS SECTION */}
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <button onClick={() => navigate("/records")} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#B3E5FC] transition-all text-center group">
                                 <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">📄</div>
                                 <p className="text-xs font-bold text-gray-700">Records</p>
                             </button>
-                            <button onClick={() => navigate("/records", { state: { activeTab: 'prescriptions' } })} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#B3E5FC] transition-all text-center group">
+                            <button onClick={() => navigate("/records")} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#B3E5FC] transition-all text-center group">
                                 <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">💊</div>
                                 <p className="text-xs font-bold text-gray-700">Prescriptions</p>
                             </button>
-                            <button onClick={() => navigate("/records", { state: { activeTab: 'reports' } })} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#B3E5FC] transition-all text-center group">
+                            <button onClick={() => navigate("/lab-tests")} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#B3E5FC] transition-all text-center group">
                                 <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">🧪</div>
                                 <p className="text-xs font-bold text-gray-700">Lab Reports</p>
+                            </button>
+                            <button onClick={() => navigate("/payment")} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#B3E5FC] transition-all text-center group">
+                                <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">💳</div>
+                                <p className="text-xs font-bold text-gray-700">Payments</p>
                             </button>
                         </div>
                     </div>
 
                     {/* RIGHT COLUMN: Sidebar-like content */}
                     <div className="space-y-8">
-                        {/* Health Statistics / Chart Placeholder */}
-                        <section className="bg-white rounded-2xl shadow-md border border-gray-50 p-6">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="font-bold text-gray-900">Health Progress</h3>
-                                <span className="text-xs font-bold text-[#00A896] bg-green-50 px-2 py-1 rounded">Weekly</span>
-                            </div>
-                            <div className="space-y-5">
-                                {[
-                                    { label: "Water Intake", val: 80, color: "bg-blue-500", icon: "💧" },
-                                    { label: "Daily Steps", val: 65, color: "bg-[#028090]", icon: "👟" },
-                                    { label: "Sleep Quality", val: 90, color: "bg-purple-500", icon: "🌙" }
-                                ].map(item => (
-                                    <div key={item.label} className="space-y-2">
-                                        <div className="flex justify-between text-xs font-bold text-gray-600">
-                                            <span className="flex items-center gap-2"><span>{item.icon}</span> {item.label}</span>
-                                            <span>{item.val}%</span>
-                                        </div>
-                                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                            <div 
-                                                className={`h-full ${item.color} rounded-full transition-all duration-1000`} 
-                                                style={{ width: `${item.val}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
+                        {/* Health Statistics / Chart Placeholder Removed */}
 
                         {/* PROMO / CTA CARD */}
                         <div className="bg-gradient-to-br from-[#01579B] to-[#028090] rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
                             <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                             <div className="relative z-10">
                                 <h4 className="text-xl font-bold mb-3 leading-tight">Need a Consultation Now?</h4>
-                                <p className="text-white/80 text-sm mb-6 leading-relaxed">Connect with our top specialists in minutes through secure video call.</p>
+                                <p className="text-white/80 text-sm mb-6 leading-relaxed">Connect with our top specialists in minutes for expert medical consultation.</p>
                                 <button 
                                     onClick={() => navigate("/doctors")}
                                     className="w-full bg-white text-[#01579B] font-bold py-3 rounded-2xl hover:bg-[#B3E5FC] transition-colors shadow-lg active:scale-95"
