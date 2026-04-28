@@ -4,12 +4,12 @@ const User = require("../models/User");
 
 const seedAdmin = async () => {
     try {
-        const email = "admin@caremate.com";
-        const passwordPlain = "Admin@12345678";
+        const email = "admincaremate@gmail.com";
+        const passwordPlain = "Admin_care@1404";
 
         const existingAdmin = await User.findOne({ email });
         if (existingAdmin) {
-            console.log("✅ Admin user already exists.");
+            //console.log("✅ Admin user already exists.");
             return;
         }
 
