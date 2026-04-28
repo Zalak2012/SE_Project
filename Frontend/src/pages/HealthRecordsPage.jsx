@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -64,12 +65,14 @@ const StatusBadge = ({ status }) => {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const HealthRecordsPage = () => {
-    const [activeTab, setActiveTab] = useState('history');
+    const location = useLocation();
+    const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'history');
     const { currentUser } = useAuth();
     const [conditions, setConditions] = useState([]);
     const [prescriptions, setPrescriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [reports] = useState(SEED_REPORTS);
+    const [documents, setDocuments] = useState([]);
     const [expandedPrescription, setExpandedPrescription] = useState(null);
     const [toast, setToast] = useState('');
     const fileInputRef = useRef(null);
@@ -100,17 +103,40 @@ const HealthRecordsPage = () => {
         setTimeout(() => setToast(''), 3000);
     };
 
+    const handleFileUpload = (e) => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+        const newDocs = files.map(f => ({
+            id: Date.now() + Math.random(),
+            name: f.name,
+            size: (f.size / 1024).toFixed(1) + ' KB',
+            type: f.type,
+            uploadedAt: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+            url: URL.createObjectURL(f),
+        }));
+        setDocuments(prev => [...newDocs, ...prev]);
+        showToast(`✅ ${files.length} file${files.length > 1 ? 's' : ''} uploaded`);
+        e.target.value = '';
+    };
+
+    const handleDeleteDoc = (id) => {
+        setDocuments(prev => prev.filter(d => d.id !== id));
+        showToast('🗑️ Document removed');
+    };
+
     // Summary stats
     const stats = [
         { label: 'Active Conditions', value: conditions.filter(c => c.status === 'Active').length, icon: '💓', color: 'bg-red-50 text-red-600' },
         { label: 'Total Reports', value: reports.length, icon: '🔬', color: 'bg-blue-50 text-blue-600' },
         { label: 'Prescriptions', value: prescriptions.length, icon: '💊', color: 'bg-purple-50 text-purple-600' },
+        { label: 'Documents', value: documents.length, icon: '📄', color: 'bg-green-50 text-green-600' },
     ];
 
     const tabs = [
         { id: 'history', label: 'Medical History', icon: '🏥' },
         { id: 'prescriptions', label: 'Prescriptions', icon: '💊' },
         { id: 'reports', label: 'Lab Reports', icon: '🔬' },
+        { id: 'documents', label: 'Documents', icon: '📄' },
     ];
 
     return (
@@ -204,7 +230,7 @@ const HealthRecordsPage = () => {
                                         <div key={p._id || p.id} className="rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
                                             {/* Header */}
                                             <button
-                                                onClick={() => setExpandedPrescription(expandedPrescription === p._id || p.id ? null : p._id || p.id)}
+                                                onClick={() => setExpandedPrescription(expandedPrescription === (p._id || p.id) ? null : (p._id || p.id))}
                                                 className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
                                             >
                                                 <div className="flex items-center gap-4">
@@ -218,25 +244,40 @@ const HealthRecordsPage = () => {
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-xs font-bold text-[#028090] bg-[#f0fdfc] px-2.5 py-1 rounded-full border border-[#028090]/20">
-                                                        1 medicine
+                                                        {p.medicines?.length > 0 ? `${p.medicines.length} medicine${p.medicines.length > 1 ? 's' : ''}` : '1 medicine'}
                                                     </span>
-                                                    <svg className={`w-4 h-4 text-gray-400 transition-transform ${expandedPrescription === p._id || p.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                                    <svg className={`w-4 h-4 text-gray-400 transition-transform ${expandedPrescription === (p._id || p.id) ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                                                 </div>
                                             </button>
 
                                             {/* Medicines list */}
-                                            {expandedPrescription === p._id || p.id && (
+                                            {expandedPrescription === (p._id || p.id) && (
                                                 <div className="border-t border-gray-100 p-5 bg-gray-50 space-y-3 animate-[fadeIn_0.2s_ease-out_both]">
-                                                                                                        <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center text-sm">💊</div>
-                                                                <div>
-                                                                    <p className="font-bold text-gray-900 text-sm">{p.medicineName}</p>
-                                                                    <p className="text-xs text-gray-500">{p.notes}</p>
+                                                                                        {(p.medicines || []).length > 0 ? (
+                                                            p.medicines.map((med, idx) => (
+                                                                <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 mb-2">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center text-sm">💊</div>
+                                                                        <div>
+                                                                            <p className="font-bold text-gray-900 text-sm">{med.name}</p>
+                                                                            <p className="text-xs text-gray-500">{p.notes}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <span className="text-sm font-black text-[#028090] bg-[#f0fdfc] px-3 py-1.5 rounded-lg border border-[#028090]/20">{med.dosage || med.dose}</span>
                                                                 </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center text-sm">💊</div>
+                                                                    <div>
+                                                                        <p className="font-bold text-gray-900 text-sm">{p.medicineName || "Unknown Medicine"}</p>
+                                                                        <p className="text-xs text-gray-500">{p.notes}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <span className="text-sm font-black text-[#028090] bg-[#f0fdfc] px-3 py-1.5 rounded-lg border border-[#028090]/20">{p.dosage || "N/A"}</span>
                                                             </div>
-                                                            <span className="text-sm font-black text-[#028090] bg-[#f0fdfc] px-3 py-1.5 rounded-lg border border-[#028090]/20">{p.dosage}</span>
-                                                        </div>
+                                                        )}
                                                 </div>
                                             )}
                                         </div>
@@ -282,7 +323,64 @@ const HealthRecordsPage = () => {
                             </div>
                         )}
 
+                        {/* ══ DOCUMENTS ══ */}
+                        {activeTab === 'documents' && (
+                            <div className="space-y-6 animate-[fadeIn_0.3s_ease-out_both]">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h2 className="text-lg font-bold text-gray-900">Documents</h2>
+                                    <span className="text-xs font-semibold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg">{documents.length} file{documents.length !== 1 ? 's' : ''}</span>
+                                </div>
 
+                                {/* Upload area */}
+                                <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-full border-2 border-dashed border-gray-200 hover:border-[#028090] hover:bg-[#f0fdfc] transition-all rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer group"
+                                >
+                                    <div className="w-14 h-14 rounded-2xl bg-gray-50 group-hover:bg-[#e0f7f5] flex items-center justify-center text-3xl mb-3 transition-colors">📤</div>
+                                    <p className="font-bold text-gray-600 group-hover:text-[#028090] transition-colors text-sm">Click to upload files</p>
+                                    <p className="text-xs text-gray-400 mt-1">PDF, JPG, PNG — max 10MB each</p>
+                                    <input ref={fileInputRef} type="file" multiple accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileUpload} className="hidden" />
+                                </div>
+
+                                {/* File list */}
+                                {documents.length === 0 ? (
+                                    <EmptyState icon="📁" title="No documents uploaded yet" subtitle="Upload prescriptions, reports, or medical certificates." ctaLabel="Upload Records" onCta={() => fileInputRef.current?.click()} />
+                                ) : (
+                                    <div className="space-y-3">
+                                        {documents.map(doc => {
+                                            const isPDF = doc.type === 'application/pdf' || doc.name.endsWith('.pdf');
+                                            return (
+                                                <div key={doc.id} className="group flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors flex-wrap">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${isPDF ? 'bg-red-50' : 'bg-blue-50'}`}>
+                                                            {isPDF ? '📕' : '🖼️'}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-gray-800 text-sm truncate max-w-[200px] md:max-w-xs">{doc.name}</p>
+                                                            <p className="text-xs text-gray-400">{doc.size} • {doc.uploadedAt}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <a href={doc.url} download={doc.name}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#028090] bg-[#f0fdfc] hover:bg-[#028090] hover:text-white border border-[#028090]/20 rounded-lg transition-all"
+                                                        >
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                                            Download
+                                                        </a>
+                                                        <button
+                                                            onClick={() => handleDeleteDoc(doc.id)}
+                                                            className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                     </div>
                 </div>

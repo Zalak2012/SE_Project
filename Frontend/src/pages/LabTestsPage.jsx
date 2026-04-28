@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
-import { useData } from '../context/DataContext';
 import { apiFetch } from '../utils/api';
 
 const LabTestsPage = () => {
-    const { labTests: contextLabTests } = useData();
     const [savedAddresses, setSavedAddresses] = useState(() => {
         const stored = localStorage.getItem('cmp_addresses');
         return stored ? JSON.parse(stored) : [];
@@ -26,7 +24,15 @@ const LabTestsPage = () => {
         localStorage.setItem('cmp_addresses', JSON.stringify(newAddrs));
     };
 
-    const allLabTests = contextLabTests;
+    // Lab test data
+    const labTestData = [
+        { id: 1, name: "Complete Blood Count (CBC)", category: "Blood Test", description: "Measures different components of your blood.", price: 35, responseTime: "24 hours", icon: "🔬" },
+        { id: 2, name: "Lipid Panel", category: "Blood Test", description: "Checks cholesterol and triglycerides levels.", price: 50, responseTime: "24 hours", icon: "🧪" },
+        { id: 3, name: "Thyroid Function Test", category: "Hormone Test", description: "Evaluates how well your thyroid is working.", price: 65, responseTime: "48 hours", icon: "🦋" },
+        { id: 4, name: "HbA1c", category: "Diabetes", description: "Measures your average blood sugar levels.", price: 45, responseTime: "24 hours", icon: "🩸" },
+        { id: 5, name: "Vitamin D Test", category: "Vitamin", description: "Checks for vitamin D deficiency.", price: 55, responseTime: "24 hours", icon: "☀️" },
+        { id: 6, name: "Liver Function Test", category: "Blood Test", description: "Checks the levels of enzymes and proteins.", price: 40, responseTime: "24 hours", icon: "🧬" }
+    ];
 
     // Cart state
     const [selectedTests, setSelectedTests] = useState([]);
@@ -52,8 +58,8 @@ const LabTestsPage = () => {
 
     // --- Cart Logic ---
     const handleAddToCart = (test) => {
-        if (selectedTests.some(t => t._id === test._id)) {
-            setSelectedTests(selectedTests.filter(t => t._id !== test._id));
+        if (selectedTests.some(t => t.id === test.id)) {
+            setSelectedTests(selectedTests.filter(t => t.id !== test.id));
         } else {
             setSelectedTests([...selectedTests, test]);
         }
@@ -61,7 +67,7 @@ const LabTestsPage = () => {
 
     const totalSelected = selectedTests.length;
     const totalPrice = selectedTests.reduce((acc, test) => acc + test.price, 0);
-    const isSelected = (id) => selectedTests.some(t => t._id === id);
+    const isSelected = (id) => selectedTests.some(t => t.id === id);
 
     const getBadgeStyle = (category) => {
         switch (category) {
@@ -255,8 +261,8 @@ const LabTestsPage = () => {
 
                 {/* GRID LAYOUT */}
                 <section className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 animate-[slideUp_0.5s_ease-out_both]">
-                    {allLabTests.map((test) => (
-                        <div key={test._id} className={`group relative bg-white rounded-2xl shadow-sm border p-6 md:p-8 flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isSelected(test._id) ? 'border-[#00A896] ring-2 ring-[#00A896]/10 bg-[#f0f9f8]' : 'border-gray-100'}`}>
+                    {labTestData.map((test) => (
+                        <div key={test.id} className={`group relative bg-white rounded-2xl shadow-sm border p-6 md:p-8 flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isSelected(test.id) ? 'border-[#00A896] ring-2 ring-[#00A896]/10 bg-[#f0f9f8]' : 'border-gray-100'}`}>
                             <div className="flex justify-between items-start mb-6">
                                 <div className="text-4xl bg-gray-50 w-14 h-14 flex items-center justify-center rounded-xl shadow-inner group-hover:scale-110 transition-transform">{test.icon}</div>
                                 <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getBadgeStyle(test.category)}`}>{test.category}</span>
@@ -270,8 +276,8 @@ const LabTestsPage = () => {
                             </div>
                             <div className="mt-8 flex items-center justify-between pt-6 border-t border-gray-50">
                                 <span className="text-2xl font-bold text-gray-900">${test.price}</span>
-                                <button onClick={() => handleAddToCart(test)} className={`px-5 py-2.5 rounded-xl font-bold transition-all duration-300 ${isSelected(test._id) ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' : 'bg-[#00A896] text-white hover:bg-[#028090] shadow-md hover:shadow-lg'}`}>
-                                    {isSelected(test._id) ? 'Remove' : 'Add to Cart'}
+                                <button onClick={() => handleAddToCart(test)} className={`px-5 py-2.5 rounded-xl font-bold transition-all duration-300 ${isSelected(test.id) ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' : 'bg-[#00A896] text-white hover:bg-[#028090] shadow-md hover:shadow-lg'}`}>
+                                    {isSelected(test.id) ? 'Remove' : 'Add to Cart'}
                                 </button>
                             </div>
                         </div>

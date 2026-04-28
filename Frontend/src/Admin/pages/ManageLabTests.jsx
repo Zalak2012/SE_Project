@@ -68,7 +68,7 @@ const ManageLabTests = () => {
         e.preventDefault();
         const testData = { ...formData, price: Number(formData.price) };
         if (editingTest) {
-            updateLabTest(editingTest._id, testData);
+            updateLabTest(editingTest.id, testData);
         } else {
             addLabTest(testData);
         }
@@ -151,7 +151,7 @@ const ManageLabTests = () => {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {filteredTests.map((test) => (
-                                <tr key={test._id} className="bg-white hover:bg-gray-50/50 transition-colors group">
+                                <tr key={test.id} className="bg-white hover:bg-gray-50/50 transition-colors group">
                                     <td className="py-4 px-6">
                                         <div className="flex items-center gap-3">
                                             <span className="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-lg">{test.icon}</span>
@@ -166,7 +166,7 @@ const ManageLabTests = () => {
                                     </td>
 
                                     <td className="py-4 px-6 align-middle font-bold text-gray-900">
-                                        ₹{test.price}
+                                        ${test.price}
                                     </td>
 
                                     <td className="py-4 px-6 align-middle">
@@ -195,7 +195,7 @@ const ManageLabTests = () => {
                                             <button
                                                 onClick={() => {
                                                     if(window.confirm('Are you sure you want to delete this lab test?')) {
-                                                        deleteLabTest(test._id);
+                                                        deleteLabTest(test.id);
                                                     }
                                                 }}
                                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none"
@@ -263,7 +263,7 @@ const ManageLabTests = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Price (₹) *</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Price ($) *</label>
                                     <input 
                                         type="number" 
                                         required
@@ -307,18 +307,6 @@ const ManageLabTests = () => {
                                         className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:border-[#028090] focus:ring-1 focus:ring-[#028090]"
                                     />
                                 </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Response Time *</label>
-                                <input 
-                                    type="text" 
-                                    required
-                                    placeholder="e.g. 24 hours"
-                                    value={formData.responseTime}
-                                    onChange={(e) => setFormData({...formData, responseTime: e.target.value})}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:border-[#028090] focus:ring-1 focus:ring-[#028090]"
-                                />
                             </div>
                             
                             <div className="pt-4 border-t border-gray-100 flex gap-3 mt-6">

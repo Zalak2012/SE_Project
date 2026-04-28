@@ -96,7 +96,7 @@ const ManageReviews = () => {
                         </thead>
                         <tbody className="divide-y divide-[#F1F5F9]">
                             {filteredReviews.map((review) => (
-                                <tr key={review._id} className="bg-white hover:bg-[#FAFAFA] transition-colors group">
+                                <tr key={review.id} className="bg-white hover:bg-[#FAFAFA] transition-colors group">
                                     
                                     {/* User Column */}
                                     <td className="py-4 px-6">
@@ -149,7 +149,7 @@ const ManageReviews = () => {
                                         <div className="flex justify-end gap-2">
                                             {review.status === 'Pending' && (
                                                 <button
-                                                    onClick={() => updateReviewStatus(review._id, 'Approved')}
+                                                    onClick={() => updateReviewStatus(review.id, 'Approved')}
                                                     className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors focus:outline-none"
                                                     title="Approve"
                                                 >
@@ -158,7 +158,7 @@ const ManageReviews = () => {
                                             )}
                                             {review.status === 'Approved' && (
                                                 <button
-                                                    onClick={() => updateReviewStatus(review._id, 'Pending')}
+                                                    onClick={() => updateReviewStatus(review.id, 'Pending')}
                                                     className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors focus:outline-none"
                                                     title="Reject/Pending"
                                                 >
@@ -168,7 +168,7 @@ const ManageReviews = () => {
                                             <button
                                                 onClick={() => {
                                                     if(window.confirm('Are you sure you want to delete this review?')) {
-                                                        deleteReview(review._id);
+                                                        deleteReview(review.id);
                                                     }
                                                 }}
                                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none"

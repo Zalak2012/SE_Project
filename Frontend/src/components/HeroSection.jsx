@@ -1,32 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { useData } from '../context/DataContext';
 
 const HeroSection = ({ onProtectedAction }) => {
-    const { reviews } = useData();
-    const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
-
-    const approvedReviews = reviews.filter(r => r.status === 'Approved');
-
-    useEffect(() => {
-        if (approvedReviews.length <= 1) return;
-        const interval = setInterval(() => {
-            setCurrentReviewIndex(prev => (prev + 1) % approvedReviews.length);
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [approvedReviews.length]);
-
-    const displayReview = approvedReviews.length > 0 ? approvedReviews[currentReviewIndex] : {
-        userName: "JD",
-        avatar: "",
-        rating: 5,
-        text: "Highly recommended! Dr. Sarah is amazing."
-    };
-
-    const getInitials = (name) => {
-        if (!name) return "??";
-        return name.substring(0, 2).toUpperCase();
-    };
     return (
         <section className="bg-[#B3E5FC]/20 py-16 md:py-24 relative overflow-hidden">
             <div className="container mx-auto px-4 md:px-8 max-w-7xl">
@@ -139,19 +114,15 @@ const HeroSection = ({ onProtectedAction }) => {
                             </div>
                         </div>
 
-                        <div className="absolute -bottom-5 -left-10 bg-white p-3 md:p-4 rounded-2xl shadow-xl border border-[#B3E5FC] z-20 flex items-center gap-3 w-64 translate-y-2 transition-all duration-500">
-                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold shrink-0 overflow-hidden">
-                                {displayReview.avatar ? (
-                                    <img src={displayReview.avatar} alt="avatar" className="w-full h-full object-cover" />
-                                ) : (
-                                    getInitials(displayReview.userName)
-                                )}
+                        <div className="absolute -bottom-5 -left-10 bg-white p-3 md:p-4 rounded-2xl shadow-xl border border-[#B3E5FC] z-20 flex items-center gap-3 w-64 translate-y-2">
+                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold shrink-0">
+                                JD
                             </div>
                             <div>
                                 <div className="flex text-yellow-400 text-xs mb-0.5">
-                                    {"★".repeat(displayReview.rating)}{"☆".repeat(5 - displayReview.rating)}
+                                    ★★★★★
                                 </div>
-                                <p className="text-xs text-gray-600 line-clamp-2">"{displayReview.text}"</p>
+                                <p className="text-xs text-gray-600">"Highly recommended! Dr. Sarah is amazing."</p>
                             </div>
                         </div>
                     </div>

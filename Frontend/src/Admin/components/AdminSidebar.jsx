@@ -17,6 +17,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
 
     const settingItems = [
         { name: 'Profile', path: '/admin/profile', icon: '👤' },
+        { name: 'Settings', path: '/admin/settings', icon: '⚙️' },
     ];
 
     return (

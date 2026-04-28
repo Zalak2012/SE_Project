@@ -8,15 +8,14 @@ import { getImageUrl } from "../../utils/getImageUrl";
 const DoctorApprovals = () => {
     const navigate = useNavigate();
 
-    // ✅ Dynamic State
-    const [allDoctors, setAllDoctors] = useState([]);
+    // ✅ Dynamic State (Phase 17)
+    const [pendingDoctors, setPendingDoctors] = useState([]);
     const [filter, setFilter] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(null);
-    const [pendingCount, setPendingCount] = useState(0);
 
-    const fetchAllDoctors = async () => {
+    const fetchPendingDoctors = async () => {
         try {
             const token = localStorage.getItem("token");
             if (!token) {
@@ -24,27 +23,23 @@ const DoctorApprovals = () => {
                 return;
             }
 
-            console.log("⏳ Fetching all doctors from MongoDB...");
-            const res = await apiFetch("/api/admin/all-doctors");
+            console.log("⏳ Fetching pending doctors from MongoDB...");
+            const res = await apiFetch("/api/admin/pending-doctors");
             
             if (res.ok) {
                 const data = await res.json();
-                console.log("✅ All Doctors Loaded:", data.length);
-                setAllDoctors(data);
-                
-                // Calculate pending count for the badge
-                const count = data.filter(d => d.status === 'pending').length;
-                setPendingCount(count);
+                console.log("✅ Pending Doctors Loaded:", data.length);
+                setPendingDoctors(data);
             }
         } catch (err) {
-            console.error("❌ Fetch All Doctors Error:", err);
+            console.error("❌ Fetch Pending Doctors Error:", err);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchAllDoctors();
+        fetchPendingDoctors();
     }, []);
 
     const handleApprove = async (id) => {
@@ -54,7 +49,7 @@ const DoctorApprovals = () => {
             const res = await apiFetch(`/api/admin/approve/${id}`, { method: "PUT" });
             if (res.ok) {
                 console.log("✅ Approved successfully, refreshing list...");
-                await fetchAllDoctors();
+                await fetchPendingDoctors();
             }
         } catch (error) {
             console.error("❌ Approval error:", error);
@@ -70,7 +65,7 @@ const DoctorApprovals = () => {
             const res = await apiFetch(`/api/admin/reject/${id}`, { method: "PUT" });
             if (res.ok) {
                 console.log("✅ Rejected successfully, refreshing list...");
-                await fetchAllDoctors();
+                await fetchPendingDoctors();
             }
         } catch (error) {
             console.error("❌ Rejection error:", error);
@@ -79,7 +74,7 @@ const DoctorApprovals = () => {
         }
     };
 
-    const filteredApprovals = allDoctors.filter(doc => {
+    const filteredApprovals = pendingDoctors.filter(doc => {
         const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                               doc.email.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesFilter = filter === 'All' || doc.status === filter.toLowerCase();
@@ -115,7 +110,7 @@ const DoctorApprovals = () => {
                 {/* Pending Badge */}
                 <div className="flex items-center gap-2 px-4 py-2 bg-[#FFF7ED] text-[#EA580C] rounded-full border border-[#FED7AA] shadow-sm font-bold text-sm">
                     <Clock className="w-4 h-4" />
-                    <span>{pendingCount} Pending</span>
+                    <span>{pendingDoctors.length} Pending</span>
                 </div>
             </motion.div>
 
@@ -218,15 +213,10 @@ const DoctorApprovals = () => {
                                         {actionLoading === doc._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><XCircle className="w-4 h-4 text-[#EF4444]" /> Reject</>}
                                     </button>
                                 </>
-                            ) : doc.status === 'approved' ? (
+                            ) : (
                                 <span className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#E0F2F1] text-[#00897B] font-bold text-sm shadow-sm border border-[#B2DFDB]">
                                     <UserCheck className="w-4 h-4" />
                                     Approved
-                                </span>
-                            ) : (
-                                <span className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-50 text-red-600 font-bold text-sm shadow-sm border border-red-100">
-                                    <XCircle className="w-4 h-4" />
-                                    Rejected
                                 </span>
                             )}
                         </div>

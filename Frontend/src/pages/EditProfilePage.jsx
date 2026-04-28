@@ -76,7 +76,7 @@ const EditProfilePage = () => {
 
         setIsSaving(true);
         try {
-            const response = await apiFetch("http://localhost:5000/api/users/profile", {
+            const response = await apiFetch("/api/users/profile", {
                 method: "PUT",
                 body: JSON.stringify({
                     name: editedProfile.name,

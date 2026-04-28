@@ -4,9 +4,6 @@ import { AuthProvider } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import VerifyEmail from './pages/VerifyEmail';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
 import HomePage from './pages/HomePage';
 import FindDoctors from './pages/FindDoctors';
 import DoctorProfile from './pages/DoctorProfile';
@@ -45,8 +42,8 @@ import AdminProfile from './Admin/pages/AdminProfile';
 import AdminSettings from './Admin/pages/AdminSettings';
 import ManageReviews from './Admin/pages/ManageReviews';
 import ManageLabTests from './Admin/pages/ManageLabTests';
-import Appointments from './Admin/pages/Appointments';
 import AIMonitoring from './Admin/pages/AIMonitoring';
+import { AdminAppointments } from './Admin/pages/PlaceholderPages';
 
 function App() {
   return (
@@ -58,9 +55,6 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/doctors" element={<FindDoctors />} />
             <Route path="/doctors/:id" element={<DoctorProfile />} />
             <Route path="/booking/:id" element={<BookingPage />} />
@@ -87,7 +81,7 @@ function App() {
                 <Route path="approvals" element={<DoctorApprovals />} />
                 <Route path="reviews" element={<ManageReviews />} />
                 <Route path="lab-tests" element={<ManageLabTests />} />
-                <Route path="appointments" element={<Appointments />} />
+                <Route path="appointments" element={<AdminAppointments />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="ai-monitoring" element={<AIMonitoring />} />
                 <Route path="profile" element={<AdminProfile />} />

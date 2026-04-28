@@ -3,7 +3,6 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Star, Loader2 } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
 import { getImageUrl } from '../utils/getImageUrl';
 
@@ -59,8 +58,6 @@ const AppointmentsPage = () => {
         return statusMatch;
     });
 
-    const { currentUser } = useAuth();
-
     const handleFeedbackSubmit = (e) => {
         e.preventDefault();
         if (!rating || !review.trim()) {
@@ -69,18 +66,20 @@ const AppointmentsPage = () => {
         }
 
         const newFeedback = {
-            userName: currentUser?.name || "Patient User",
+            patientName: "John Doe (Me)", // Mock patient
+            doctorName: selectedAppt.name, 
+            userName: "John Doe (Me)", // For review card schema
             userType: "Patient",
-            text: review,
             rating: rating,
-            status: "Pending",
-            avatar: currentUser?.avatar || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-            doctorId: selectedAppt.doctorId?._id
+            text: review,
+            date: new Date().toLocaleDateString(),
+            status: "Pending", // For admin to approve
+            avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80"
         };
 
         addReview(newFeedback);
         
-        setSubmittedFeedbacks(prev => new Set(prev).add(selectedAppt._id));
+        setSubmittedFeedbacks(prev => new Set(prev).add(selectedAppt.id));
         setSelectedAppt(null);
         setRating(0);
         setReview("");

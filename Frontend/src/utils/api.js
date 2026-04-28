@@ -1,7 +1,7 @@
-const BASE_URL = import.meta.env.VITE_API_URL || ""; // Default to relative for production/docker deployment
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 /**
- * Centralized API utility for CareMatePlus
+ * Centralized API utility for CareMate+
  * Handles: Authorization, Token Expiry (401), and Safe Parsing
  */
 export const apiFetch = async (endpoint, options = {}) => {

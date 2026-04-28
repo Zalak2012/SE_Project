@@ -27,7 +27,7 @@ const HomePage = () => {
                 {/* Section Header */}
                 <div className="text-center mb-16">
                     <div className="inline-block bg-[#028090]/10 text-[#028090] font-semibold px-4 py-2 rounded-full text-sm border border-[#028090]/20 mb-4">
-                        Why Choose CareMatePlus
+                        Why Choose CareMate Plus
                     </div>
                     <h2 className="text-3xl md:text-4xl font-bold text-[#01579B] mb-4">Everything You Need for Better Healthcare</h2>
                     <p className="text-gray-600 max-w-2xl mx-auto text-lg">
@@ -122,8 +122,8 @@ const HomePage = () => {
                         <div className="w-16 h-16 bg-[#00A896]/10 rounded-2xl flex items-center justify-center mb-6 text-3xl group-hover:bg-[#00A896] transition-colors duration-300">
                             📞
                         </div>
-                        <h3 className="text-xl font-bold mb-3 text-gray-800 group-hover:text-[#028090]">24/7 Medical Support</h3>
-                        <p className="text-gray-600 leading-relaxed flex-grow">Access medical assistance anytime, anywhere. Consult with certified professionals through our secure platform.</p>
+                        <h3 className="text-xl font-bold mb-3 text-gray-800 group-hover:text-[#028090]">24/7 Virtual Support</h3>
+                        <p className="text-gray-600 leading-relaxed flex-grow">Access medical assistance anytime, anywhere. Consult with certified professionals over secure video or chat.</p>
 
                         {/* Learn More Hover Link */}
                         <div className="mt-6 flex items-center text-[#00A896] font-bold opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
@@ -180,7 +180,7 @@ const HomePage = () => {
                 {/* Section Header */}
                 <div className="text-center mb-16">
                     <h2 className="text-3xl md:text-4xl font-bold text-[#01579B] mb-4">Loved by Patients & Doctors</h2>
-                    <p className="text-gray-600 max-w-2xl mx-auto text-lg">Join thousands of satisfied users who trust CareMatePlus for their healthcare needs.</p>
+                    <p className="text-gray-600 max-w-2xl mx-auto text-lg">Join thousands of satisfied users who trust CareMate Plus for their healthcare needs.</p>
                 </div>
 
                 {/* Testimonials Grid */}
