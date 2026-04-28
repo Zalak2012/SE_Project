@@ -11,10 +11,6 @@ const appointmentSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
-  amount: {
-    type: Number,
-    required: true
-  },
   appointmentDate: {
     type: Date,
     required: true

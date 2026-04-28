@@ -11,14 +11,17 @@ const prescriptionSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
-  medicineName: {
+  diagnosis: {
     type: String,
     required: true
   },
-  dosage: {
-    type: String,
-    required: true
-  },
+  medicines: [
+    {
+      name: { type: String, required: true },
+      dosage: { type: String, required: true },
+      duration: { type: String }
+    }
+  ],
   notes: {
     type: String,
     default: ""

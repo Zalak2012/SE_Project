@@ -2,16 +2,6 @@ const User = require("../models/User");
 const Appointment = require("../models/Appointment");
 const logActivity = require("../utils/logActivity");
 
-// Fetch all doctors (Pending, Approved, Rejected)
-exports.getAllDoctors = async (req, res) => {
-  try {
-    const doctors = await User.find({ role: "doctor" }).sort({ createdAt: -1 });
-    res.status(200).json(doctors);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch all doctors" });
-  }
-};
-
 // Fetch doctors with pending status
 exports.getPendingDoctors = async (req, res) => {
   try {
@@ -174,37 +164,4 @@ exports.debugUsers = async (req, res) => {
   }
 };
 
-// Fetch all appointments for the whole system
-exports.getAllAppointments = async (req, res) => {
-  try {
-    const appointments = await Appointment.find()
-      .populate("patientId", "name email")
-      .populate("doctorId", "name email specialization consultationFee")
-      .sort({ appointmentDate: -1, appointmentTime: -1 });
 
-    res.status(200).json(appointments);
-  } catch (error) {
-    console.error("Fetch all appointments error:", error);
-    res.status(500).json({ message: "Failed to fetch appointments" });
-  }
-};
-
-// Delete a user
-exports.deleteUser = async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    
-    console.log("User deleted:", user.name);
-    await logActivity("user_deleted", `User ${user.name} (${user.role}) removed by admin`);
-    
-    res.json({ message: "User deleted successfully" });
-  } catch (err) {
-    console.error("Error deleting user:", err);
-    res.status(500).json({ message: "Failed to delete user" });
-  }
-};
-
-// End of file

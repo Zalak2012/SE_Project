@@ -38,23 +38,14 @@ exports.getRecordsByPatient = async (req, res) => {
     }
 };
 
-exports.getRecords = async (req, res) => {
+exports.getDoctorRecords = async (req, res) => {
     try {
-        let query = {};
-        if (req.user.role === "doctor") {
-            query.doctorId = req.user.userId;
-        } else if (req.user.role === "patient") {
-            query.patientId = req.user.userId;
-        }
-
-        const records = await MedicalRecord.find(query)
+        const doctorId = req.user.userId;
+        const records = await MedicalRecord.find({ doctorId })
             .populate("patientId", "name email")
-            .populate("doctorId", "name specialty")
             .sort({ createdAt: -1 });
-            
         res.status(200).json(records);
     } catch (error) {
-        console.error("Fetch records error:", error);
-        res.status(500).json({ message: "Failed to fetch records" });
+        res.status(500).json({ message: "Failed to fetch doctor medical records" });
     }
 };

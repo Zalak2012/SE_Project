@@ -9,8 +9,6 @@ const upload = require('../middleware/uploadDoctorImage');
 router.post("/signup", signupUser);
 router.post("/register", signupUser); // Alias
 router.post("/login", loginUser);
-router.post("/verify-email", require("../controllers/userController").verifyEmail);
-router.post("/resend-otp", require("../controllers/userController").resendOTP);
 
 // Use a combined profile update or doctor-specific if needed
 // For now, let's use the requested doctor update for /api/doctors/profile

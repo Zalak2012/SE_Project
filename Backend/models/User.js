@@ -36,12 +36,6 @@ const userSchema = new mongoose.Schema({
   phone: String,
   gender: String,
   avatarUrl: String,
-  isEmailVerified: {
-    type: Boolean,
-    default: false
-  },
-  verificationToken: String,
-  verificationTokenExpires: Date,
 
   // Doctor-specific fields
   specialization: { type: String, default: "General Physician" },

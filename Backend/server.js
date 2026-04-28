@@ -15,12 +15,8 @@ const medicalRecordRoutes = require("./routes/medicalRecordRoutes");
 const prescriptionRoutes = require("./routes/prescriptionRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
-const notificationRoutes = require("./routes/notificationRoutes");
-const reviewRoutes = require("./routes/reviewRoutes");
-const labTestRoutes = require("./routes/labTestRoutes");
 const User = require("./models/User");
 const seedAdmin = require("./utils/seedAdmin");
-const seedLabTests = require("./utils/seedLabTests");
 
 const app = express();
 
@@ -37,9 +33,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check route
-app.get("/api/health", (req, res) => {
-  res.send("Backend is healthy ✅");
+// Test route
+app.get("/", (req, res) => {
+  res.send("Backend running");
 });
 
 // Protected route
@@ -72,23 +68,6 @@ app.use("/api/medical-records", medicalRecordRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/schedule", scheduleRoutes);
 app.use("/api/payment", paymentRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/labtests", labTestRoutes);
-
-// ✅ Serve Frontend in Production
-if (process.env.NODE_ENV === "production") {
-  // Point to the dist folder (which will be in the same root or as specified)
-  const frontendPath = path.join(__dirname, "../Frontend/dist");
-  app.use(express.static(frontendPath));
-
-  app.get("*path", (req, res) => {
-    // Only handle non-API routes
-    if (!req.url.startsWith("/api")) {
-      res.sendFile(path.join(frontendPath, "index.html"));
-    }
-  });
-}
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI);
@@ -101,7 +80,6 @@ mongoose.connection.on("connected", () => {
   console.log("MongoDB connected ✅");
 
   seedAdmin();
-  seedLabTests();
 
   const PORT = process.env.PORT || 5000;
 
