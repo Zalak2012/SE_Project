@@ -2,14 +2,14 @@ const Prescription = require("../models/Prescription");
 
 exports.createPrescription = async (req, res) => {
     try {
-        const { patientId, diagnosis, medicines, notes } = req.body;
+        const { patientId, medicineName, dosage, notes } = req.body;
         const doctorId = req.user.userId;
 
         const newPrescription = new Prescription({
             patientId,
             doctorId,
-            diagnosis,
-            medicines,
+            medicineName,
+            dosage,
             notes
         });
 
@@ -36,36 +36,23 @@ exports.getPrescriptionsByPatient = async (req, res) => {
     }
 };
 
-exports.getDoctorPrescriptions = async (req, res) => {
+exports.getPrescriptions = async (req, res) => {
     try {
-        const doctorId = req.user.userId;
-        const prescriptions = await Prescription.find({ doctorId })
-            .populate("patientId", "name email")
-            .sort({ createdAt: -1 });
-        res.status(200).json(prescriptions);
-    } catch (error) {
-        res.status(500).json({ message: "Failed to fetch doctor prescriptions" });
-    }
-};
-
-exports.updatePrescription = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { patientId, diagnosis, medicines, notes } = req.body;
-        const doctorId = req.user.userId;
-
-        const updatedPrescription = await Prescription.findOneAndUpdate(
-            { _id: id, doctorId },
-            { patientId, diagnosis, medicines, notes },
-            { new: true, runValidators: true }
-        );
-
-        if (!updatedPrescription) {
-            return res.status(404).json({ message: "Prescription not found or unauthorized" });
+        let query = {};
+        if (req.user.role === "doctor") {
+            query.doctorId = req.user.userId;
+        } else if (req.user.role === "patient") {
+            query.patientId = req.user.userId;
         }
 
-        res.status(200).json(updatedPrescription);
+        const prescriptions = await Prescription.find(query)
+            .populate("patientId", "name email")
+            .populate("doctorId", "name specialty")
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(prescriptions);
     } catch (error) {
-        res.status(500).json({ message: "Failed to update prescription" });
+        console.error("Fetch prescriptions error:", error);
+        res.status(500).json({ message: "Failed to fetch prescriptions" });
     }
 };
